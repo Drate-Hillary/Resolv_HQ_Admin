@@ -7,9 +7,19 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog"
 import { Icon } from "@/components/ui/icon"
-import { createClient } from "@/lib/client"
-import type { HelpArticleRow } from "@/types/database.types"
+import { apiClient } from "@/backend/api/client"
 import { File02Icon } from "@hugeicons/core-free-icons"
+
+export interface HelpArticle {
+  id: string
+  slug: string
+  title: string
+  category: string
+  summary: string
+  body: string[]
+  source: string
+  readMinutes: number
+}
 
 interface Draft {
   id: string | null
@@ -19,7 +29,7 @@ interface Draft {
   summary: string
   body: string
   source: string
-  read_minutes: string
+  readMinutes: string
 }
 
 const emptyDraft: Draft = {
@@ -30,24 +40,23 @@ const emptyDraft: Draft = {
   summary: "",
   body: "",
   source: "",
-  read_minutes: "3",
+  readMinutes: "3",
 }
 
-function toDraft(row: HelpArticleRow): Draft {
-  const paragraphs = Array.isArray(row.body) ? (row.body as unknown[]).map(String) : []
+function toDraft(row: HelpArticle): Draft {
   return {
     id: row.id,
     slug: row.slug,
     title: row.title,
     category: row.category,
     summary: row.summary,
-    body: paragraphs.join("\n\n"),
+    body: row.body.join("\n\n"),
     source: row.source,
-    read_minutes: String(row.read_minutes),
+    readMinutes: String(row.readMinutes),
   }
 }
 
-export function HelpArticlesView({ initialArticles }: { initialArticles: HelpArticleRow[] }) {
+export function HelpArticlesView({ initialArticles }: { initialArticles: HelpArticle[] }) {
   const [articles, setArticles] = useState(initialArticles)
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState<Draft>(emptyDraft)
@@ -60,7 +69,7 @@ export function HelpArticlesView({ initialArticles }: { initialArticles: HelpArt
     setOpen(true)
   }
 
-  function openEdit(row: HelpArticleRow) {
+  function openEdit(row: HelpArticle) {
     setDraft(toDraft(row))
     setError(null)
     setOpen(true)
@@ -69,42 +78,36 @@ export function HelpArticlesView({ initialArticles }: { initialArticles: HelpArt
   async function save() {
     setSaving(true)
     setError(null)
-    const supabase = createClient()
-    const body = draft.body
-      .split(/\n\s*\n/)
-      .map((p) => p.trim())
-      .filter(Boolean)
     const payload = {
       slug: draft.slug.trim(),
       title: draft.title.trim(),
       category: draft.category.trim(),
       summary: draft.summary.trim(),
-      body,
+      body: draft.body,
       source: draft.source.trim() || "Admin console",
-      read_minutes: Number(draft.read_minutes) || 1,
+      readMinutes: Number(draft.readMinutes) || 1,
     }
 
-    const result = draft.id
-      ? await supabase.from("help_articles").update(payload).eq("id", draft.id).select("*").single()
-      : await supabase.from("help_articles").insert(payload).select("*").single()
+    try {
+      const { data: row } = draft.id
+        ? await apiClient.patch<HelpArticle>(`/help-articles/${draft.id}`, payload)
+        : await apiClient.post<HelpArticle>("/help-articles", payload)
 
-    setSaving(false)
-    if (result.error) {
-      setError(result.error.message)
-      return
+      setArticles((prev) => {
+        const exists = prev.some((a) => a.id === row.id)
+        return exists ? prev.map((a) => (a.id === row.id ? row : a)) : [row, ...prev]
+      })
+      setOpen(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save article")
+    } finally {
+      setSaving(false)
     }
-    const row = result.data
-    setArticles((prev) => {
-      const exists = prev.some((a) => a.id === row.id)
-      return exists ? prev.map((a) => (a.id === row.id ? row : a)) : [row, ...prev]
-    })
-    setOpen(false)
   }
 
   async function remove(id: string) {
     setArticles((prev) => prev.filter((a) => a.id !== id))
-    const supabase = createClient()
-    await supabase.from("help_articles").delete().eq("id", id)
+    await apiClient.delete(`/help-articles/${id}`)
   }
 
   return (
@@ -129,7 +132,6 @@ export function HelpArticlesView({ initialArticles }: { initialArticles: HelpArt
               <th className="px-4 py-2.5 font-medium">Category</th>
               <th className="px-4 py-2.5 font-medium">Source</th>
               <th className="px-4 py-2.5 font-medium">Read time</th>
-              <th className="px-4 py-2.5 font-medium">Updated</th>
               <th className="px-4 py-2.5 font-medium" />
             </tr>
           </thead>
@@ -147,8 +149,7 @@ export function HelpArticlesView({ initialArticles }: { initialArticles: HelpArt
                   <Badge variant="secondary">{a.category}</Badge>
                 </td>
                 <td className="px-4 py-2.5 text-muted-foreground">{a.source}</td>
-                <td className="tabular px-4 py-2.5 text-muted-foreground">{a.read_minutes} min</td>
-                <td className="px-4 py-2.5 text-muted-foreground">{new Date(a.updated_at).toLocaleDateString()}</td>
+                <td className="tabular px-4 py-2.5 text-muted-foreground">{a.readMinutes} min</td>
                 <td className="px-4 py-2.5 text-right">
                   <Button variant="ghost" size="sm" onClick={() => remove(a.id)}>
                     Delete
@@ -158,7 +159,7 @@ export function HelpArticlesView({ initialArticles }: { initialArticles: HelpArt
             ))}
             {articles.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
+                <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
                   No help articles yet.
                 </td>
               </tr>
@@ -187,8 +188,8 @@ export function HelpArticlesView({ initialArticles }: { initialArticles: HelpArt
                 <Input
                   type="number"
                   min={1}
-                  value={draft.read_minutes}
-                  onChange={(e) => setDraft({ ...draft, read_minutes: e.target.value })}
+                  value={draft.readMinutes}
+                  onChange={(e) => setDraft({ ...draft, readMinutes: e.target.value })}
                 />
               </Field>
             </div>

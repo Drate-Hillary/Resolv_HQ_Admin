@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Icon } from "@/components/ui/icon";
 import { CheckmarkCircle02Icon, Cancel01Icon, SparklesIcon } from "@hugeicons/core-free-icons";
-import { createClient } from "@/lib/client";
+import { createClient } from "@/backend/supabase/client";
 
 // Real excerpt from the seeded boundary matrix (supabase/seed.sql →
 // guardrail_rules) — what this console actually is, shown before a

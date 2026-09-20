@@ -3,9 +3,21 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Icon } from "@/components/ui/icon"
-import { createClient } from "@/lib/client"
-import type { AgentMemoryRecordRow } from "@/types/database.types"
+import { apiClient } from "@/backend/api/client"
 import { Search01Icon, Delete02Icon, AiBrain01Icon } from "@hugeicons/core-free-icons"
+
+export interface AgentMemoryRecordRow {
+  id: string
+  request_id: string | null
+  title: string
+  content: string
+  reason: string
+  access_scope: string
+  source: string
+  retention_days: number
+  created_at: string
+  expires_at: string
+}
 
 export function MemoryView({ initialRecords }: { initialRecords: AgentMemoryRecordRow[] }) {
   const [records, setRecords] = useState(initialRecords)
@@ -17,8 +29,7 @@ export function MemoryView({ initialRecords }: { initialRecords: AgentMemoryReco
 
   async function deleteRecord(id: string) {
     setRecords((prev) => prev.filter((r) => r.id !== id))
-    const supabase = createClient()
-    await supabase.from("agent_memory_records").delete().eq("id", id)
+    await apiClient.delete(`/admin/memory-records/${id}`)
   }
 
   return (

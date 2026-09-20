@@ -4,7 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "cn"
 import { useAdminStore } from "@/lib/stores/admin-store"
 import type { AdminTicket } from "@/types"
-import type { RequestPriority } from "@/types/database.types"
+import type { RequestPriority } from "@/types"
 
 const priorityOrder: RequestPriority[] = ["high", "medium", "low"]
 const priorityLabel: Record<RequestPriority, string> = {

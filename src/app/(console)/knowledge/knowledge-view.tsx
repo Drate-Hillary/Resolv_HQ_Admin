@@ -5,14 +5,25 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Icon } from "@/components/ui/icon"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
-import { createClient } from "@/lib/client"
-import type { KnowledgeDocumentRow } from "@/types/database.types"
+import { apiClient } from "@/backend/api/client"
 import {
   Search01Icon,
   Upload01Icon,
   CheckmarkCircle02Icon,
   File02Icon,
 } from "@hugeicons/core-free-icons"
+
+export interface KnowledgeDocumentRow {
+  id: string
+  name: string
+  file_type: "PDF" | "DOCX" | "MD"
+  source: string
+  status: "indexed" | "indexing" | "error"
+  storage_path: string | null
+  chunk_count: number
+  added_by: string | null
+  added_at: string
+}
 
 const statusVariant: Record<KnowledgeDocumentRow["status"], "approve" | "default" | "destructive"> = {
   indexed: "approve",
@@ -30,33 +41,26 @@ export function KnowledgeView({ initialDocuments }: { initialDocuments: Knowledg
 
   const uploadDocument = async () => {
     setUploading(true)
-    const supabase = createClient()
-    const { data: userRes } = await supabase.auth.getUser()
-    const { data, error } = await supabase
-      .from("knowledge_documents")
-      .insert({
+    try {
+      const { data } = await apiClient.post<KnowledgeDocumentRow>("/admin/knowledge", {
         name: "Untitled upload.pdf",
         file_type: "PDF",
         source: "Manual upload",
         status: "indexing",
-        added_by: userRes?.user?.id ?? null,
       })
-      .select("*")
-      .single()
-    setUploading(false)
-    if (error || !data) return
+      setDocuments((prev) => [data, ...prev])
 
-    setDocuments((prev) => [data, ...prev])
-
-    setTimeout(async () => {
-      const { data: updated } = await supabase
-        .from("knowledge_documents")
-        .update({ status: "indexed", chunk_count: 14 })
-        .eq("id", data.id)
-        .select("*")
-        .single()
-      if (updated) setDocuments((prev) => prev.map((d) => (d.id === data.id ? updated : d)))
-    }, 1800)
+      // The backend flips this same row to "indexed" (chunk_count 14) about
+      // 1.8s after creating it (see admin/knowledge.ts) — mirrored here
+      // optimistically so the UI updates without a second round trip.
+      setTimeout(() => {
+        setDocuments((prev) =>
+          prev.map((d) => (d.id === data.id ? { ...d, status: "indexed", chunk_count: 14 } : d))
+        )
+      }, 1800)
+    } finally {
+      setUploading(false)
+    }
   }
 
   return (

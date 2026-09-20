@@ -1,0 +1,22 @@
+{
+  "name": "model-benchmark",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Benchmarks GPT-4o mini, Claude Haiku 4.5, and Gemini 3.8 Flash on RESOLV-HQ customer support triage: latency, reasoning accuracy, token cost.",
+  "type": "module",
+  "scripts": {
+    "bench": "tsx src/run.ts",
+    "bench:dry-run": "tsx src/run.ts --dry-run"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.0",
+    "@google/genai": "^1.30.0",
+    "dotenv": "^16.4.5",
+    "openai": "^4.104.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "tsx": "^4.19.2",
+    "typescript": "^5"
+  }
+}

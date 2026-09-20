@@ -1,9 +1,8 @@
-import { createClient } from "@/lib/server"
-import { MemoryView } from "./memory-view"
+import { apiFetch } from "@/backend/api/server"
+import { MemoryView, type AgentMemoryRecordRow } from "./memory-view"
 
 export default async function MemoryPage() {
-  const supabase = await createClient()
-  const { data } = await supabase.from("agent_memory_records").select("*").order("created_at", { ascending: false })
+  const records = await apiFetch<AgentMemoryRecordRow[]>("/admin/memory-records")
 
-  return <MemoryView initialRecords={data ?? []} />
+  return <MemoryView initialRecords={records} />
 }

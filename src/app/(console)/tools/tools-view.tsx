@@ -5,9 +5,21 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Icon } from "@/components/ui/icon"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
-import { createClient } from "@/lib/client"
-import type { AgentToolRow } from "@/types/database.types"
+import { apiClient } from "@/backend/api/client"
 import { Wrench01Icon } from "@hugeicons/core-free-icons"
+
+export interface AgentToolRow {
+  id: string
+  name: string
+  purpose: string
+  input_schema: unknown
+  output_schema: unknown
+  permission: "read" | "write"
+  approval_required: boolean
+  status: "active" | "disabled"
+  failure_behavior: string
+  used_by: string
+}
 
 interface SchemaField {
   name: string
@@ -26,24 +38,14 @@ export function ToolsView({ initialTools }: { initialTools: AgentToolRow[] }) {
 
   async function toggleStatus(tool: AgentToolRow) {
     setPending(tool.id)
-    const supabase = createClient()
-    const nextStatus = tool.status === "active" ? "disabled" : "active"
-    const { data, error } = await supabase.from("agent_tools").update({ status: nextStatus }).eq("id", tool.id).select("*").single()
-    setPending(null)
-    if (error || !data) return
-
-    setTools((prev) => prev.map((t) => (t.id === tool.id ? data : t)))
-    setSelected((s) => (s?.id === tool.id ? data : s))
-
-    const { data: userRes } = await supabase.auth.getUser()
-    if (userRes?.user) {
-      await supabase.from("admin_activity_logs").insert({
-        admin_id: userRes.user.id,
-        action: "tool_status_changed",
-        target_type: "agent_tool",
-        target_id: tool.id,
-        detail: { from: tool.status, to: nextStatus },
-      })
+    try {
+      const { data } = await apiClient.patch<AgentToolRow>(`/admin/tools/${tool.id}/status`)
+      setTools((prev) => prev.map((t) => (t.id === tool.id ? data : t)))
+      setSelected((s) => (s?.id === tool.id ? data : s))
+    } catch {
+      // Leave status as-is if the request failed.
+    } finally {
+      setPending(null)
     }
   }
 

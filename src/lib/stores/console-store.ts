@@ -1,8 +1,7 @@
 import { create } from "zustand"
-import { createClient } from "@/lib/client"
-import { buildDemoRun } from "@/lib/mock-console"
+import { apiClient } from "@/backend/api/client"
+import { buildDemoRun } from "@/backend/mock-console"
 import type { AgentStatus, RunStep, RunStepKey } from "@/types/console"
-import type { Json } from "@/types/database.types"
 
 interface WorkspaceMessage {
   id: string
@@ -37,15 +36,17 @@ const statusForStep: Partial<Record<RunStepKey, AgentStatus>> = {
   approval: "awaiting_approval",
 }
 
-const MODEL = "resolv-agent-v3"
-const PROMPT_VERSION = "procurement-planner@1.4.0"
-
 /**
  * Drives the same scripted step-by-step reveal the demo always had (there's
- * no real LLM behind this yet), but every step of it now writes a real row:
- * agent_runs, agent_steps, tool_executions and — at the approval gate —
- * agent_approvals. approve()/reject() decide that same row instead of only
- * flipping local state, and are logged to admin_activity_logs.
+ * no real LLM behind this yet), but every step of it now writes a real row
+ * through the backend API: agent_runs, agent_steps, tool_executions and —
+ * at the approval gate — agent_approvals. approve()/reject() decide that
+ * same row through the backend instead of only flipping local state; the
+ * backend logs the decision to admin_activity_logs itself.
+ *
+ * Every persistence call below is best-effort: if the backend request
+ * fails (or a run couldn't be started at all), the scripted reveal keeps
+ * advancing locally rather than blocking the UI on it.
  */
 export const useConsoleStore = create<ConsoleState>((set, get) => ({
   status: "ready",
@@ -62,10 +63,6 @@ export const useConsoleStore = create<ConsoleState>((set, get) => ({
     const busy: AgentStatus[] = ["thinking", "retrieving", "using_tool"]
     if (busy.includes(get().status)) return
 
-    const supabase = createClient()
-    const { data: userRes } = await supabase.auth.getUser()
-    const initiatedBy = userRes?.user?.id ?? null
-
     const steps = buildDemoRun(request)
     set({
       run: steps,
@@ -77,43 +74,14 @@ export const useConsoleStore = create<ConsoleState>((set, get) => ({
       messages: [...get().messages, { id: `local-${nextId++}`, role: "user", content: request }],
     })
 
-    const { data: runRow } = await supabase
-      .from("agent_runs")
-      .insert({
-        title: request,
-        initiated_by: initiatedBy,
-        status: "in_progress",
-        model: MODEL,
-        prompt_version: PROMPT_VERSION,
-      })
-      .select("id")
-      .single()
-    const runId = runRow?.id ?? null
-    set({ runId })
-
-    const stepIdByKey: Record<string, string> = {}
-    if (runId) {
-      const { data: stepRows } = await supabase
-        .from("agent_steps")
-        .insert(
-          steps.map((step, i) => ({
-            run_id: runId,
-            step_key: step.key,
-            sequence: i,
-            label: step.label,
-            status: "pending" as const,
-            detail: (step.detail ?? null) as unknown as Json,
-          }))
-        )
-        .select("id, step_key")
-      for (const row of stepRows ?? []) stepIdByKey[row.step_key] = row.id
-      set({ stepIdByKey })
-    }
-
-    const toolIdByName: Record<string, string> = {}
-    if (runId) {
-      const { data: toolRows } = await supabase.from("agent_tools").select("id, name")
-      for (const t of toolRows ?? []) toolIdByName[t.name] = t.id
+    try {
+      const { data } = await apiClient.post<{ run: { id: string }; stepIdByKey: Record<string, string> }>(
+        "/admin/agent-runs",
+        { title: request }
+      )
+      set({ runId: data.run.id, stepIdByKey: data.stepIdByKey })
+    } catch {
+      // No run persisted — the reveal below still plays out locally.
     }
 
     for (const step of steps) {
@@ -122,56 +90,53 @@ export const useConsoleStore = create<ConsoleState>((set, get) => ({
       set({ status: statusForStep[step.key] ?? "thinking" })
       await wait(550)
 
-      const stepId = get().stepIdByKey[step.key]
+      const { runId, stepIdByKey } = get()
+      const stepId = stepIdByKey[step.key]
 
       if (step.key === "approval") {
         setStepStatus(set, step.key, "blocked")
         set({ status: "awaiting_approval" })
 
-        if (stepId) await supabase.from("agent_steps").update({ status: "blocked" }).eq("id", stepId)
+        if (runId && stepId) {
+          await apiClient.patch(`/admin/agent-runs/${runId}/steps/${stepId}`, { status: "blocked" }).catch(() => {})
+        }
 
         if (runId && step.detail?.type === "approval") {
-          const { data: approvalRow } = await supabase
-            .from("agent_approvals")
-            .insert({
-              run_id: runId,
-              step_id: stepId ?? null,
+          try {
+            const { data: approval } = await apiClient.post<{ id: string }>(`/admin/agent-runs/${runId}/approvals`, {
+              stepId: stepId ?? null,
               action: step.detail.action,
               description: step.detail.action,
               risk: step.detail.risk,
               amount: step.detail.amount ?? null,
               currency: step.detail.currency ?? null,
-              status: "pending",
             })
-            .select("id")
-            .single()
-          set({ approvalId: approvalRow?.id ?? null })
-          await supabase.from("agent_runs").update({ status: "awaiting_approval" }).eq("id", runId)
+            set({ approvalId: approval.id })
+          } catch {
+            set({ approvalId: null })
+          }
         }
         return
       }
 
       setStepStatus(set, step.key, "done")
-      if (stepId) {
-        await supabase
-          .from("agent_steps")
-          .update({ status: "done", detail: (step.detail ?? null) as unknown as Json })
-          .eq("id", stepId)
+      if (runId && stepId) {
+        await apiClient
+          .patch(`/admin/agent-runs/${runId}/steps/${stepId}`, { status: "done", detail: step.detail ?? null })
+          .catch(() => {})
       }
 
       if (step.key === "tool" && step.detail?.type === "tool" && runId) {
-        const toolId = toolIdByName[step.detail.name]
-        if (toolId) {
-          await supabase.from("tool_executions").insert({
-            run_id: runId,
-            step_id: stepId ?? null,
-            tool_id: toolId,
-            input: step.detail.input as unknown as Json,
-            output: step.detail.output as unknown as Json,
+        await apiClient
+          .post(`/admin/agent-runs/${runId}/tool-executions`, {
+            stepId: stepId ?? null,
+            toolName: step.detail.name,
+            input: step.detail.input,
+            output: step.detail.output,
             status: step.detail.status,
-            duration_ms: step.detail.durationMs,
+            durationMs: step.detail.durationMs,
           })
-        }
+          .catch(() => {})
       }
     }
   },
@@ -181,47 +146,32 @@ export const useConsoleStore = create<ConsoleState>((set, get) => ({
     updateApproval(set, "approved")
     set({ status: "using_tool" })
 
-    const supabase = createClient()
-    const { data: userRes } = await supabase.auth.getUser()
-    const adminId = userRes?.user?.id ?? null
     const { approvalId, runId, stepIdByKey } = get()
 
     if (approvalId) {
-      await supabase
-        .from("agent_approvals")
-        .update({ status: "approved", decided_by: adminId, decided_at: new Date().toISOString() })
-        .eq("id", approvalId)
-      if (adminId) {
-        await supabase.from("admin_activity_logs").insert({
-          admin_id: adminId,
-          action: "approval_decided",
-          target_type: "agent_approval",
-          target_id: approvalId,
-          detail: { status: "approved", run_id: runId } as unknown as Json,
-        })
-      }
+      await apiClient.patch(`/admin/approvals/${approvalId}/approve`).catch(() => {})
     }
 
     await wait(700)
     setStepStatus(set, "approval", "done")
-    if (stepIdByKey.approval) await supabase.from("agent_steps").update({ status: "done" }).eq("id", stepIdByKey.approval)
+    if (runId && stepIdByKey.approval) {
+      await apiClient.patch(`/admin/agent-runs/${runId}/steps/${stepIdByKey.approval}`, { status: "done" }).catch(() => {})
+    }
 
     setStepStatus(set, "result", "active")
     await wait(500)
     const summary = "Requisition approved and sent to the supplier. Manager sign-off recorded."
     updateResultSummary(set, summary)
     setStepStatus(set, "result", "done")
-    if (stepIdByKey.result) {
-      await supabase
-        .from("agent_steps")
-        .update({ status: "done", detail: { type: "result", summary } as unknown as Json })
-        .eq("id", stepIdByKey.result)
+    if (runId && stepIdByKey.result) {
+      await apiClient
+        .patch(`/admin/agent-runs/${runId}/steps/${stepIdByKey.result}`, { status: "done", detail: { type: "result", summary } })
+        .catch(() => {})
     }
     if (runId) {
-      await supabase
-        .from("agent_runs")
-        .update({ status: "completed", completed_at: new Date().toISOString() })
-        .eq("id", runId)
+      await apiClient
+        .patch(`/admin/agent-runs/${runId}`, { status: "completed", completedAt: new Date().toISOString() })
+        .catch(() => {})
     }
 
     set((s) => ({
@@ -241,43 +191,31 @@ export const useConsoleStore = create<ConsoleState>((set, get) => ({
     if (get().status !== "awaiting_approval") return
     updateApproval(set, "rejected")
 
-    const supabase = createClient()
-    const { data: userRes } = await supabase.auth.getUser()
-    const adminId = userRes?.user?.id ?? null
     const { approvalId, runId, stepIdByKey } = get()
 
     if (approvalId) {
-      await supabase
-        .from("agent_approvals")
-        .update({ status: "rejected", decided_by: adminId, decided_at: new Date().toISOString() })
-        .eq("id", approvalId)
-      if (adminId) {
-        await supabase.from("admin_activity_logs").insert({
-          admin_id: adminId,
-          action: "approval_decided",
-          target_type: "agent_approval",
-          target_id: approvalId,
-          detail: { status: "rejected", run_id: runId } as unknown as Json,
-        })
-      }
+      await apiClient.patch(`/admin/approvals/${approvalId}/reject`).catch(() => {})
     }
 
     setStepStatus(set, "approval", "failed")
-    if (stepIdByKey.approval) await supabase.from("agent_steps").update({ status: "failed" }).eq("id", stepIdByKey.approval)
+    if (runId && stepIdByKey.approval) {
+      await apiClient.patch(`/admin/agent-runs/${runId}/steps/${stepIdByKey.approval}`, { status: "failed" }).catch(() => {})
+    }
 
     setStepStatus(set, "result", "active")
     await wait(500)
     const summary = "Requisition rejected by manager. Draft discarded, no purchase was made."
     updateResultSummary(set, summary)
     setStepStatus(set, "result", "done")
-    if (stepIdByKey.result) {
-      await supabase
-        .from("agent_steps")
-        .update({ status: "done", detail: { type: "result", summary } as unknown as Json })
-        .eq("id", stepIdByKey.result)
+    if (runId && stepIdByKey.result) {
+      await apiClient
+        .patch(`/admin/agent-runs/${runId}/steps/${stepIdByKey.result}`, { status: "done", detail: { type: "result", summary } })
+        .catch(() => {})
     }
     if (runId) {
-      await supabase.from("agent_runs").update({ status: "failed", completed_at: new Date().toISOString() }).eq("id", runId)
+      await apiClient
+        .patch(`/admin/agent-runs/${runId}`, { status: "failed", completedAt: new Date().toISOString() })
+        .catch(() => {})
     }
 
     set((s) => ({

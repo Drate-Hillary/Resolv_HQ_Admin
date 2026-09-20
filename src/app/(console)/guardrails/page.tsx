@@ -1,11 +1,16 @@
 import { Icon } from "@/components/ui/icon"
-import { createClient } from "@/lib/server"
+import { apiFetch } from "@/backend/api/server"
 import { CheckmarkCircle02Icon, Cancel01Icon } from "@hugeicons/core-free-icons"
 
+interface GuardrailRule {
+  capability: string
+  ai_allowed: boolean
+  human_approval: boolean
+  note: string | null
+}
+
 export default async function GuardrailsPage() {
-  const supabase = await createClient()
-  const { data } = await supabase.from("guardrail_rules").select("*").order("capability")
-  const guardrails = data ?? []
+  const guardrails = await apiFetch<GuardrailRule[]>("/admin/guardrails")
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-6 lg:px-6">

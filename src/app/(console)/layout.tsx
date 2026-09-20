@@ -1,7 +1,13 @@
 import { AppSidebar } from "@/components/app-sidebar"
 import { ConsoleHeader } from "@/components/console/console-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { createClient } from "@/lib/server"
+import { createClient } from "@/backend/supabase/server"
+import { apiFetch } from "@/backend/api/server"
+
+interface MeResponse {
+  name: string
+  email: string
+}
 
 export default async function ConsoleLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -9,14 +15,16 @@ export default async function ConsoleLayout({ children }: { children: React.Reac
     data: { user: authUser },
   } = await supabase.auth.getUser()
 
-  const { data: profile } = authUser
-    ? await supabase.from("profiles").select("full_name, avatar_url").eq("id", authUser.id).single()
-    : { data: null }
+  // Note: the backend's /me response doesn't include an avatar image URL
+  // (only avatarInitials, which NavUser computes client-side from `name`
+  // anyway), so `avatar` is always empty here — a deliberate deviation,
+  // not a bug: there's no equivalent endpoint to fetch a profile photo from.
+  const profile = authUser ? await apiFetch<MeResponse>("/me").catch(() => null) : null
 
   const user = {
-    name: profile?.full_name ?? authUser?.email?.split("@")[0] ?? "Staff",
-    email: authUser?.email ?? "",
-    avatar: profile?.avatar_url ?? "",
+    name: profile?.name || authUser?.email?.split("@")[0] || "Staff",
+    email: profile?.email ?? authUser?.email ?? "",
+    avatar: "",
   }
 
   return (

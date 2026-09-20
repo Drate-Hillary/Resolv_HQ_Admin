@@ -1,5 +1,6 @@
 import { create } from "zustand"
-import { createClient } from "@/lib/client"
+import { createClient } from "@/backend/supabase/client"
+import { apiClient } from "@/backend/api/client"
 import type { ChatStreamItem, Citation } from "@/types"
 
 interface ChatState {
@@ -15,14 +16,17 @@ function timestamp() {
   return new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })
 }
 
+const FALLBACK_REPLY =
+  "Got it — I've logged that and I'm keeping the request open with your manager's review. I'll message you here the moment there's an update."
+
 /**
  * /chat is deliberately public (see src/middleware.ts) — it's the
- * customer-facing demo surface, not part of the staff console. Because of
- * that, `auth.uid()` may be null here, and ai_conversations/ai_messages RLS
- * requires `customer_id = auth.uid()` to insert. So: try to persist for real
- * when a customer session exists (e.g. staff previewing the demo while
- * signed in, or once the customer app reuses this flow signed-in), and fall
- * back to the local-only stream otherwise — the UI never blocks on it.
+ * customer-facing demo surface, not part of the staff console. The backend's
+ * /chat/* routes require a bearer token same as everything else there, so:
+ * try to persist for real (and use the backend's real answer-engine reply)
+ * only when a Supabase session actually exists — e.g. staff previewing the
+ * demo while signed in — and fall back to the local-only canned stream
+ * otherwise. The UI never blocks on the network call either way.
  */
 export const useChatStore = create<ChatState>((set, get) => ({
   conversationId: null,
@@ -42,22 +46,20 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set((s) => ({ stream: [...s.stream, userMessage], isLoading: true }))
 
     const supabase = createClient()
-    const { data: userRes } = await supabase.auth.getUser()
-    const customerId = userRes?.user?.id ?? null
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    const hasSession = Boolean(session)
 
     let conversationId = get().conversationId
-    if (!conversationId) {
-      const { data, error } = await supabase
-        .from("ai_conversations")
-        .insert({ customer_id: customerId, channel: "chat" })
-        .select("id")
-        .single()
-      conversationId = !error && data ? data.id : null
-      set({ conversationId })
-    }
-
-    if (conversationId) {
-      await supabase.from("ai_messages").insert({ conversation_id: conversationId, role: "user", content })
+    if (hasSession && !conversationId) {
+      try {
+        const { data } = await apiClient.post<{ id: string }>("/chat/conversations", { channel: "chat" })
+        conversationId = data.id
+        set({ conversationId })
+      } catch {
+        conversationId = null
+      }
     }
 
     const toolId = `local-${nextId++}`
@@ -73,30 +75,26 @@ export const useChatStore = create<ChatState>((set, get) => ({
       ),
     }))
 
-    const replyText =
-      "Got it — I've logged that and I'm keeping the request open with your manager's review. I'll message you here the moment there's an update."
-
+    let replyText = FALLBACK_REPLY
     let citations: Citation[] | undefined
-    if (conversationId) {
-      const { data: assistantMessage } = await supabase
-        .from("ai_messages")
-        .insert({ conversation_id: conversationId, role: "assistant", content: replyText })
-        .select("id")
-        .single()
 
-      if (assistantMessage?.id) {
-        const { data: sources } = await supabase
-          .from("ai_message_sources")
-          .select("id, label, excerpt")
-          .eq("message_id", assistantMessage.id)
-        if (sources?.length) {
-          citations = sources.map((s, i) => ({
+    if (hasSession && conversationId) {
+      try {
+        const { data } = await apiClient.post<{
+          assistantMessage: { content: string; sources: { id: string; label: string; excerpt: string | null }[] }
+        }>(`/chat/conversations/${conversationId}/messages`, { content })
+
+        replyText = data.assistantMessage.content
+        if (data.assistantMessage.sources.length > 0) {
+          citations = data.assistantMessage.sources.map((s, i) => ({
             id: s.id,
             number: i + 1,
             policyLabel: s.label,
             excerpt: s.excerpt ?? "",
           }))
         }
+      } catch {
+        // Fall back to the local canned reply below.
       }
     }
 
