@@ -1,17 +1,19 @@
 "use client"
 
 import { useEffect, useState, type ChangeEvent } from "react"
-import { createClient } from "@/lib/client"
+import { apiClient } from "@/backend/api/client"
 import { Icon } from "@/components/ui/icon"
 import { File02Icon, Upload01Icon } from "@hugeicons/core-free-icons"
-import type { RequestAttachmentRow } from "@/types/database.types"
 
-/**
- * Backed by Supabase Storage — assumes a bucket named "request-attachments"
- * exists (create it in the Supabase dashboard; public or signed-URL access
- * both work, this reads back whatever `getPublicUrl` returns).
- */
-const BUCKET = "request-attachments"
+interface RequestAttachment {
+  id: string
+  fileUrl: string
+  fileName: string
+  fileType: string | null
+  fileSizeBytes: number | null
+  createdAt: string
+  messageId?: string | null
+}
 
 function formatSize(bytes: number | null) {
   if (bytes == null) return null
@@ -20,7 +22,7 @@ function formatSize(bytes: number | null) {
 }
 
 export function AttachmentsPanel({ requestId }: { requestId: string | null }) {
-  const [attachments, setAttachments] = useState<RequestAttachmentRow[]>([])
+  const [attachments, setAttachments] = useState<RequestAttachment[]>([])
   const [loadedFor, setLoadedFor] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -28,16 +30,15 @@ export function AttachmentsPanel({ requestId }: { requestId: string | null }) {
   useEffect(() => {
     if (!requestId) return
     let active = true
-    const supabase = createClient()
-    supabase
-      .from("request_attachments")
-      .select("*")
-      .eq("request_id", requestId)
-      .order("created_at", { ascending: false })
+    apiClient
+      .get<{ attachments: RequestAttachment[] }>(`/requests/${requestId}`)
       .then(({ data }) => {
         if (!active) return
-        setAttachments(data ?? [])
+        setAttachments(data.attachments ?? [])
         setLoadedFor(requestId)
+      })
+      .catch(() => {
+        if (active) setLoadedFor(requestId)
       })
     return () => {
       active = false
@@ -53,37 +54,22 @@ export function AttachmentsPanel({ requestId }: { requestId: string | null }) {
 
     setUploading(true)
     setError(null)
-    const supabase = createClient()
-    const path = `${requestId}/${Date.now()}-${file.name}`
 
-    const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, file)
-    if (uploadError) {
-      setError(uploadError.message)
-      setUploading(false)
-      return
-    }
+    const formData = new FormData()
+    formData.append("file", file)
 
-    const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path)
-    const { data: userRes } = await supabase.auth.getUser()
-    const { data: row, error: insertError } = await supabase
-      .from("request_attachments")
-      .insert({
-        request_id: requestId,
-        uploaded_by: userRes?.user?.id ?? null,
-        file_url: pub.publicUrl,
-        file_name: file.name,
-        file_type: file.type || null,
-        file_size_bytes: file.size,
-      })
-      .select("*")
-      .single()
-
-    if (insertError) setError(insertError.message)
-    if (row) {
+    try {
+      const { data: row } = await apiClient.post<RequestAttachment>(
+        `/requests/${requestId}/attachments`,
+        formData
+      )
       setAttachments((prev) => [row, ...prev])
       setLoadedFor(requestId)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed")
+    } finally {
+      setUploading(false)
     }
-    setUploading(false)
   }
 
   if (!requestId) return null
@@ -106,15 +92,15 @@ export function AttachmentsPanel({ requestId }: { requestId: string | null }) {
         {visibleAttachments.map((a) => (
           <a
             key={a.id}
-            href={a.file_url}
+            href={a.fileUrl}
             target="_blank"
             rel="noreferrer"
             className="flex items-center gap-2 rounded-md border border-border px-2.5 py-2 text-sm hover:bg-muted/50"
           >
             <Icon icon={File02Icon} size={16} className="shrink-0 text-muted-foreground" />
-            <span className="min-w-0 flex-1 truncate text-foreground">{a.file_name}</span>
-            {formatSize(a.file_size_bytes) && (
-              <span className="shrink-0 text-xs text-muted-foreground">{formatSize(a.file_size_bytes)}</span>
+            <span className="min-w-0 flex-1 truncate text-foreground">{a.fileName}</span>
+            {formatSize(a.fileSizeBytes) && (
+              <span className="shrink-0 text-xs text-muted-foreground">{formatSize(a.fileSizeBytes)}</span>
             )}
           </a>
         ))}

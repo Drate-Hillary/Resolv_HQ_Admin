@@ -1,9 +1,8 @@
-import { createClient } from "@/lib/server"
-import { ToolsView } from "./tools-view"
+import { apiFetch } from "@/backend/api/server"
+import { ToolsView, type AgentToolRow } from "./tools-view"
 
 export default async function ToolsPage() {
-  const supabase = await createClient()
-  const { data } = await supabase.from("agent_tools").select("*").order("name")
+  const tools = await apiFetch<AgentToolRow[]>("/admin/tools")
 
-  return <ToolsView initialTools={data ?? []} />
+  return <ToolsView initialTools={tools} />
 }

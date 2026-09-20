@@ -2,7 +2,7 @@ import Link from "next/link"
 import { StatCard } from "@/components/console/stat-card"
 import { Progress } from "@/components/ui/progress"
 import { Icon } from "@/components/ui/icon"
-import { createClient } from "@/lib/server"
+import { apiFetch } from "@/backend/api/server"
 import type { EvalDimension } from "@/types/console"
 import {
   Pulse02Icon,
@@ -33,71 +33,33 @@ const statusLabel: Record<string, string> = {
   failed: "Blocked",
 }
 
-export default async function DashboardPage() {
-  const supabase = await createClient()
-  const now = new Date()
-  const startOfToday = new Date(now)
-  startOfToday.setHours(0, 0, 0, 0)
-  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
+interface RecentRun {
+  id: string | null
+  title: string | null
+  date: string | null
+  status: string | null
+}
 
-  const [
-    recentRunsRes,
-    latestEvalRes,
-    ragCountRes,
-    toolsCountRes,
-    memoryCountRes,
-    scenarioCountRes,
-    failedCountRes,
-    pendingApprovalsRes,
-    tasksTodayRes,
-    latencyRes,
-    feedbackRes,
-  ] = await Promise.all([
-    supabase.from("trace_runs_view").select("id, title, date, status").order("date", { ascending: false }).limit(4),
-    supabase.from("evaluation_runs").select("overall_score, dimension_scores").order("run_at", { ascending: false }).limit(1),
-    supabase.from("knowledge_documents").select("id", { count: "exact", head: true }),
-    supabase.from("agent_tools").select("id", { count: "exact", head: true }).eq("status", "active"),
-    supabase.from("agent_memory_records").select("id", { count: "exact", head: true }),
-    supabase.from("evaluation_scenarios").select("id", { count: "exact", head: true }),
-    supabase
-      .from("agent_runs")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "failed")
-      .gte("started_at", sevenDaysAgo),
-    supabase.from("agent_approvals").select("id", { count: "exact", head: true }).eq("status", "pending"),
-    supabase.from("agent_runs").select("id", { count: "exact", head: true }).gte("started_at", startOfToday.toISOString()),
-    supabase
-      .from("agent_runs")
-      .select("latency_ms")
-      .eq("status", "completed")
-      .not("latency_ms", "is", null)
-      .order("started_at", { ascending: false })
-      .limit(20),
-    supabase.from("request_feedback").select("rating"),
-  ])
-
-  const recentRuns = recentRunsRes.data ?? []
-  const latestEval = latestEvalRes.data?.[0]
-  const evalDimensions = (latestEval?.dimension_scores as unknown as EvalDimension[] | null) ?? []
-  const successRate = latestEval?.overall_score ?? 0
-
-  const latencies = (latencyRes.data ?? []).map((r) => r.latency_ms).filter((v): v is number => v != null)
-  const avgLatencyMs = latencies.length ? Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length) : 0
-
-  const feedbackRatings = (feedbackRes.data ?? []).map((f) => f.rating)
-  const avgCsat = feedbackRatings.length
-    ? (feedbackRatings.reduce((a, b) => a + b, 0) / feedbackRatings.length).toFixed(1)
-    : null
-
-  const stats = {
-    tasksToday: tasksTodayRes.count ?? 0,
-    ragDocuments: ragCountRes.count ?? 0,
-    activeTools: toolsCountRes.count ?? 0,
-    memoryRecords: memoryCountRes.count ?? 0,
-    evalScenarios: scenarioCountRes.count ?? 0,
-    failedRuns: failedCountRes.count ?? 0,
-    pendingApprovals: pendingApprovalsRes.count ?? 0,
+interface DashboardResponse {
+  recentRuns: RecentRun[]
+  successRate: number
+  evalDimensions: EvalDimension[]
+  avgLatencyMs: number
+  avgCsat: string | null
+  stats: {
+    tasksToday: number
+    ragDocuments: number
+    activeTools: number
+    memoryRecords: number
+    evalScenarios: number
+    failedRuns: number
+    pendingApprovals: number
   }
+}
+
+export default async function DashboardPage() {
+  const { recentRuns, successRate, evalDimensions, avgLatencyMs, avgCsat, stats } =
+    await apiFetch<DashboardResponse>("/admin/dashboard")
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 lg:px-6">

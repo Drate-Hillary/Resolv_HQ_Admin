@@ -7,7 +7,9 @@
 // See src/lib/stores/chat-store.ts and src/lib/stores/admin-store.ts for the
 // queries that populate these.
 
-import type { ApprovalRisk, ApprovalStatus, RequestPriority } from "@/types/database.types"
+export type ApprovalRisk = "low" | "medium" | "high"
+export type ApprovalStatus = "pending" | "approved" | "rejected"
+export type RequestPriority = "low" | "medium" | "high"
 
 export type ChatRole = "user" | "assistant"
 

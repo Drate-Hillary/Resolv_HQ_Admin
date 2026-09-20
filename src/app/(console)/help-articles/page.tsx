@@ -1,9 +1,8 @@
-import { createClient } from "@/lib/server"
-import { HelpArticlesView } from "./help-articles-view"
+import { apiFetch } from "@/backend/api/server"
+import { HelpArticlesView, type HelpArticle } from "./help-articles-view"
 
 export default async function HelpArticlesPage() {
-  const supabase = await createClient()
-  const { data } = await supabase.from("help_articles").select("*").order("category").order("title")
+  const articles = await apiFetch<HelpArticle[]>("/help-articles")
 
-  return <HelpArticlesView initialArticles={data ?? []} />
+  return <HelpArticlesView initialArticles={articles} />
 }

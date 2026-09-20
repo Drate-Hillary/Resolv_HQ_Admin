@@ -25,7 +25,8 @@ import {
 } from "@/components/ui/sidebar"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { UnfoldMoreIcon, CheckmarkBadgeIcon, NotificationIcon, LogoutIcon } from "@hugeicons/core-free-icons"
-import { createClient } from "@/lib/client"
+import { createClient } from "@/backend/supabase/client"
+import { apiClient } from "@/backend/api/client"
 
 function initials(name: string) {
   return name
@@ -51,13 +52,13 @@ export function NavUser({
 
   useEffect(() => {
     let active = true
-    const supabase = createClient()
-    supabase
-      .from("agent_approvals")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "pending")
-      .then(({ count }) => {
-        if (active) setPendingApprovals(count ?? 0)
+    apiClient
+      .get<{ status: string }[]>("/admin/approvals")
+      .then(({ data }) => {
+        if (active) setPendingApprovals(data.filter((t) => t.status === "pending").length)
+      })
+      .catch(() => {
+        // Non-staff sessions (or a transient network error) simply show no badge.
       })
     return () => {
       active = false

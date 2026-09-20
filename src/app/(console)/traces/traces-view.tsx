@@ -4,8 +4,18 @@ import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Icon } from "@/components/ui/icon"
 import { cn } from "cn"
-import type { TraceRunViewRow } from "@/types/database.types"
 import { ChevronDownIcon } from "@hugeicons/core-free-icons"
+
+export interface TraceRunViewRow {
+  id: string | null
+  title: string | null
+  date: string | null
+  status: string | null
+  model: string | null
+  prompt_version: string | null
+  latency_ms: number | null
+  events: unknown
+}
 
 interface TraceEvent {
   time: string

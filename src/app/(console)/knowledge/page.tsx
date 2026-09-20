@@ -1,9 +1,8 @@
-import { createClient } from "@/lib/server"
-import { KnowledgeView } from "./knowledge-view"
+import { apiFetch } from "@/backend/api/server"
+import { KnowledgeView, type KnowledgeDocumentRow } from "./knowledge-view"
 
 export default async function KnowledgeBasePage() {
-  const supabase = await createClient()
-  const { data } = await supabase.from("knowledge_documents").select("*").order("added_at", { ascending: false })
+  const documents = await apiFetch<KnowledgeDocumentRow[]>("/admin/knowledge")
 
-  return <KnowledgeView initialDocuments={data ?? []} />
+  return <KnowledgeView initialDocuments={documents} />
 }

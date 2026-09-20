@@ -4,48 +4,54 @@ import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { createClient } from "@/lib/client"
-import type { IntegrationRow } from "@/types/database.types"
+import { apiClient } from "@/backend/api/client"
 
-export function IntegrationsManager({ initialIntegrations }: { initialIntegrations: IntegrationRow[] }) {
+export interface Integration {
+  id: string
+  name: string
+  protocol: string
+  endpoint: string
+  status: string
+  exposed_tool_count: number
+  last_sync_at: string | null
+}
+
+export function IntegrationsManager({ initialIntegrations }: { initialIntegrations: Integration[] }) {
   const [integrations, setIntegrations] = useState(initialIntegrations)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [endpointDraft, setEndpointDraft] = useState("")
   const [savingId, setSavingId] = useState<string | null>(null)
 
-  function startEdit(row: IntegrationRow) {
+  function startEdit(row: Integration) {
     setEditingId(row.id)
     setEndpointDraft(row.endpoint)
   }
 
   async function saveEndpoint(id: string) {
     setSavingId(id)
-    const supabase = createClient()
-    const { data, error } = await supabase
-      .from("integrations")
-      .update({ endpoint: endpointDraft, last_sync_at: new Date().toISOString() })
-      .eq("id", id)
-      .select("*")
-      .single()
-    setSavingId(null)
-    if (!error && data) {
+    try {
+      const { data } = await apiClient.patch<Integration>(`/admin/settings/integrations/${id}`, {
+        endpoint: endpointDraft,
+      })
       setIntegrations((prev) => prev.map((r) => (r.id === id ? data : r)))
       setEditingId(null)
+    } catch {
+      // Keep the row as-is; the edit form stays open so the admin can retry.
+    } finally {
+      setSavingId(null)
     }
   }
 
-  async function toggleStatus(row: IntegrationRow) {
+  async function toggleStatus(row: Integration) {
     setSavingId(row.id)
-    const supabase = createClient()
-    const nextStatus = row.status === "connected" ? "disconnected" : "connected"
-    const { data, error } = await supabase
-      .from("integrations")
-      .update({ status: nextStatus, last_sync_at: new Date().toISOString() })
-      .eq("id", row.id)
-      .select("*")
-      .single()
-    setSavingId(null)
-    if (!error && data) setIntegrations((prev) => prev.map((r) => (r.id === row.id ? data : r)))
+    try {
+      const { data } = await apiClient.patch<Integration>(`/admin/settings/integrations/${row.id}/status`)
+      setIntegrations((prev) => prev.map((r) => (r.id === row.id ? data : r)))
+    } catch {
+      // No-op — the badge simply doesn't flip if the request failed.
+    } finally {
+      setSavingId(null)
+    }
   }
 
   return (
