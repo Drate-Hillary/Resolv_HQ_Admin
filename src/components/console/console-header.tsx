@@ -18,13 +18,7 @@ const pageLabels: Record<string, string> = {
   "/agent": "Agent Workspace",
   "/knowledge": "Knowledge Base",
   "/tools": "Tools",
-  "/memory": "Memory",
-  "/evaluations": "Evaluations",
   "/traces": "Traces & Logs",
-  "/guardrails": "Guardrails",
-  "/activity": "Activity Log",
-  "/help-articles": "Help Articles",
-  "/settings": "Settings",
 }
 
 export function ConsoleHeader() {

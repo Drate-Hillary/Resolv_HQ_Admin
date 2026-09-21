@@ -4,28 +4,24 @@ import { useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { AttachmentsPanel } from "@/components/admin/attachments-panel"
 import { useAdminStore } from "@/lib/stores/admin-store"
 import { cn } from "cn"
-
-const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" })
 
 export function ActionPanel() {
   const selectedApprovalId = useAdminStore((s) => s.selectedApprovalId)
   const escalation = useAdminStore((s) => s.escalationsById[s.selectedApprovalId])
-  const requestId = useAdminStore((s) => s.tickets.find((t) => t.approvalId === s.selectedApprovalId)?.requestId ?? null)
   const isSubmitting = useAdminStore((s) => s.isSubmitting)
   const approve = useAdminStore((s) => s.approve)
   const reject = useAdminStore((s) => s.reject)
 
   const [isEditing, setIsEditing] = useState(false)
-  const [draft, setDraft] = useState(escalation?.aiSummary ?? "")
+  const [draft, setDraft] = useState(escalation?.reason ?? "")
   // Reset local edit state whenever the selected ticket changes, without an
   // effect: https://react.dev/learn/you-might-not-need-an-effect
   const [draftId, setDraftId] = useState(selectedApprovalId)
   if (draftId !== selectedApprovalId) {
     setDraftId(selectedApprovalId)
-    setDraft(escalation?.aiSummary ?? "")
+    setDraft(escalation?.reason ?? "")
     setIsEditing(false)
   }
 
@@ -36,7 +32,7 @@ export function ActionPanel() {
     <section className="flex min-h-0 flex-col lg:h-full">
       <div className="flex h-10 shrink-0 items-center border-b border-border px-5">
         <h2 className="text-sm font-medium tracking-tight text-muted-foreground">
-          AI draft &amp; evidence
+          Requested action
         </h2>
       </div>
 
@@ -51,7 +47,14 @@ export function ActionPanel() {
             className="flex flex-col gap-5"
           >
             <div>
-              <p className="text-sm font-medium text-muted-foreground">AI summary</p>
+              <p className="text-sm font-medium text-muted-foreground">Action</p>
+              <div className="mt-1.5 rounded-md bg-accent px-3 py-2.5 text-accent-foreground">
+                <p className="text-xs font-medium">{escalation.requestedAction}</p>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Reason</p>
               {isEditing ? (
                 <Textarea
                   value={draft}
@@ -60,61 +63,18 @@ export function ActionPanel() {
                   rows={4}
                 />
               ) : (
-                <p className="mt-1.5 text-xs/relaxed text-foreground">{draft || escalation.aiSummary}</p>
+                <p className="mt-1.5 text-xs/relaxed text-foreground">
+                  {draft || escalation.reason || "No reason given."}
+                </p>
               )}
             </div>
 
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Policy evidence</p>
-              <div className="mt-1.5 flex flex-col gap-2">
-                {escalation.evidence.length === 0 && (
-                  <p className="text-xs text-muted-foreground">No linked evidence for this action.</p>
-                )}
-                {escalation.evidence.map((e) => (
-                  <div key={e.id} className="rounded-md border border-border px-3 py-2">
-                    <p className="text-sm font-medium text-foreground">{e.source}</p>
-                    <p className="mt-0.5 text-xs/relaxed text-muted-foreground">
-                      &ldquo;{e.excerpt}&rdquo;
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Proposed action</p>
-              <div className="mt-1.5 rounded-md bg-accent px-3 py-2.5 text-accent-foreground">
-                <p className="text-xs font-medium">{escalation.action.description}</p>
-                {escalation.action.amount != null && (
-                  <p className="mt-0.5 text-lg font-semibold tabular-nums">
-                    {escalation.action.currency && escalation.action.currency !== "USD"
-                      ? `${escalation.action.amount.toLocaleString()} ${escalation.action.currency}`
-                      : currency.format(escalation.action.amount)}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {escalation.feedback && (
+            {escalation.reviewComment && (
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Customer feedback (CSAT)</p>
-                <div className="mt-1.5 rounded-md border border-border px-3 py-2">
-                  <p className="text-sm font-medium text-foreground">{escalation.feedback.rating} / 5</p>
-                  {escalation.feedback.comment && (
-                    <p className="mt-0.5 text-xs/relaxed text-muted-foreground">{escalation.feedback.comment}</p>
-                  )}
-                </div>
+                <p className="text-sm font-medium text-muted-foreground">Review comment</p>
+                <p className="mt-1.5 text-xs/relaxed text-foreground">{escalation.reviewComment}</p>
               </div>
             )}
-
-            {escalation.decisionNote && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Decision note</p>
-                <p className="mt-1.5 text-xs/relaxed text-foreground">{escalation.decisionNote}</p>
-              </div>
-            )}
-
-            <AttachmentsPanel requestId={requestId} />
           </motion.div>
         </AnimatePresence>
       </div>
@@ -151,7 +111,7 @@ export function ActionPanel() {
               disabled={isSubmitting}
               onClick={() => setIsEditing((v) => !v)}
             >
-              {isEditing ? "Cancel edit" : "Edit draft"}
+              {isEditing ? "Cancel edit" : "Edit reason"}
             </Button>
             <Button
               variant="destructive"

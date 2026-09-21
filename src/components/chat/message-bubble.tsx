@@ -1,6 +1,5 @@
 import { motion } from "framer-motion"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { CitationTag } from "@/components/chat/citation-tag"
 import { cn } from "cn"
 import type { ChatMessage } from "@/types"
 
@@ -31,12 +30,7 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
             : "rounded-bl-sm border border-border bg-card text-card-foreground"
         )}
       >
-        <p className="text-pretty">
-          {message.content}
-          {message.citations?.map((citation) => (
-            <CitationTag key={citation.id} citation={citation} />
-          ))}
-        </p>
+        <p className="text-pretty">{message.content}</p>
         <p
           className={cn(
             "mt-1 text-xs",

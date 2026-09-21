@@ -6,13 +6,15 @@ import { useAdminStore } from "@/lib/stores/admin-store"
 import type { AdminTicket } from "@/types"
 import type { RequestPriority } from "@/types"
 
-const priorityOrder: RequestPriority[] = ["high", "medium", "low"]
+const priorityOrder: RequestPriority[] = ["urgent", "high", "medium", "low"]
 const priorityLabel: Record<RequestPriority, string> = {
+  urgent: "Urgent",
   high: "High",
   medium: "Medium",
   low: "Low",
 }
 const priorityDot: Record<RequestPriority, string> = {
+  urgent: "bg-priority-high",
   high: "bg-priority-high",
   medium: "bg-priority-medium",
   low: "bg-priority-low",

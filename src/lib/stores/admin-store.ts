@@ -99,8 +99,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
               [approvalId]: {
                 ...s.escalationsById[approvalId],
                 status: "approved",
-                decisionNote: note ?? s.escalationsById[approvalId].decisionNote,
-                aiSummary: note ?? s.escalationsById[approvalId].aiSummary,
+                reviewComment: note ?? s.escalationsById[approvalId].reviewComment,
               },
             }
           : s.escalationsById,
@@ -125,7 +124,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
               [approvalId]: {
                 ...s.escalationsById[approvalId],
                 status: "rejected",
-                decisionNote: note ?? s.escalationsById[approvalId].decisionNote,
+                reviewComment: note ?? s.escalationsById[approvalId].reviewComment,
               },
             }
           : s.escalationsById,
@@ -139,7 +138,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     try {
       await apiClient.patch(`/admin/approvals/requests/${requestId}/assign`, { adminId })
       set((s) => ({
-        tickets: s.tickets.map((t) => (t.requestId === requestId ? { ...t, assignedAdminId: adminId } : t)),
+        tickets: s.tickets.map((t) => (t.requestId === requestId ? { ...t, assignedAgentId: adminId } : t)),
       }))
     } catch {
       // Leave the assignment as-is on failure.

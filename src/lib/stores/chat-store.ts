@@ -1,7 +1,7 @@
 import { create } from "zustand"
 import { createClient } from "@/backend/supabase/client"
 import { apiClient } from "@/backend/api/client"
-import type { ChatStreamItem, Citation } from "@/types"
+import type { ChatStreamItem } from "@/types"
 
 interface ChatState {
   conversationId: string | null
@@ -76,23 +76,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }))
 
     let replyText = FALLBACK_REPLY
-    let citations: Citation[] | undefined
 
     if (hasSession && conversationId) {
       try {
         const { data } = await apiClient.post<{
-          assistantMessage: { content: string; sources: { id: string; label: string; excerpt: string | null }[] }
+          assistantMessage: { content: string }
         }>(`/chat/conversations/${conversationId}/messages`, { content })
 
         replyText = data.assistantMessage.content
-        if (data.assistantMessage.sources.length > 0) {
-          citations = data.assistantMessage.sources.map((s, i) => ({
-            id: s.id,
-            number: i + 1,
-            policyLabel: s.label,
-            excerpt: s.excerpt ?? "",
-          }))
-        }
       } catch {
         // Fall back to the local canned reply below.
       }
@@ -104,7 +95,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
       role: "assistant",
       content: replyText,
       timestamp: timestamp(),
-      citations,
     }
     await wait(400)
     set((s) => ({ stream: [...s.stream, agentMessage], isLoading: false }))

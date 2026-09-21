@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Icon } from "@/components/ui/icon"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
 import { apiClient } from "@/backend/api/client"
@@ -11,24 +10,10 @@ import { Wrench01Icon } from "@hugeicons/core-free-icons"
 export interface AgentToolRow {
   id: string
   name: string
-  purpose: string
-  input_schema: unknown
-  output_schema: unknown
-  permission: "read" | "write"
-  approval_required: boolean
-  status: "active" | "disabled"
-  failure_behavior: string
-  used_by: string
-}
-
-interface SchemaField {
-  name: string
-  type: string
-}
-
-function asFields(value: unknown): SchemaField[] {
-  if (!Array.isArray(value)) return []
-  return value.filter((f): f is SchemaField => typeof f === "object" && f !== null && "name" in f && "type" in f)
+  description: string | null
+  requires_approval: boolean
+  is_active: boolean
+  created_at: string
 }
 
 export function ToolsView({ initialTools }: { initialTools: AgentToolRow[] }) {
@@ -70,21 +55,21 @@ export function ToolsView({ initialTools }: { initialTools: AgentToolRow[] }) {
                 disabled={pending === tool.id}
                 className="flex items-center gap-1.5 text-sm text-muted-foreground disabled:opacity-50"
               >
-                <span className={`size-1.5 rounded-full ${tool.status === "active" ? "bg-approve" : "bg-muted-foreground"}`} />
-                {pending === tool.id ? "Updating…" : tool.status}
+                <span className={`size-1.5 rounded-full ${tool.is_active ? "bg-approve" : "bg-muted-foreground"}`} />
+                {pending === tool.id ? "Updating…" : tool.is_active ? "active" : "disabled"}
               </button>
             </div>
             <h3 className="mt-3 text-sm font-medium text-foreground">{tool.name}</h3>
-            <p className="mt-1 line-clamp-2 flex-1 text-xs text-muted-foreground">{tool.purpose}</p>
+            <p className="mt-1 line-clamp-2 flex-1 text-xs text-muted-foreground">{tool.description ?? "No description."}</p>
             <div className="mt-3 flex flex-wrap gap-1.5">
-              <Badge variant={tool.permission === "write" ? "priority-medium" : "secondary"}>
-                {tool.permission}
-              </Badge>
-              {tool.approval_required && <Badge variant="default">approval required</Badge>}
+              {tool.requires_approval && <Badge variant="default">approval required</Badge>}
             </div>
-            <Button variant="outline" size="sm" className="mt-3" onClick={() => setSelected(tool)}>
-              View schema
-            </Button>
+            <button
+              className="mt-3 rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted"
+              onClick={() => setSelected(tool)}
+            >
+              View details
+            </button>
           </div>
         ))}
         {tools.length === 0 && <p className="text-xs text-muted-foreground">No tools registered.</p>}
@@ -96,45 +81,18 @@ export function ToolsView({ initialTools }: { initialTools: AgentToolRow[] }) {
             <>
               <SheetHeader>
                 <SheetTitle>{selected.name}</SheetTitle>
-                <SheetDescription>{selected.purpose}</SheetDescription>
+                <SheetDescription>{selected.description ?? "No description."}</SheetDescription>
               </SheetHeader>
 
               <div className="flex flex-col gap-4 px-6 pb-6 text-sm">
-                <SchemaBlock label="Input" fields={asFields(selected.input_schema)} />
-                <SchemaBlock label="Output" fields={asFields(selected.output_schema)} />
-                <DetailRow label="Permission" value={selected.permission} />
-                <DetailRow label="Approval required" value={selected.approval_required ? "Yes" : "No"} />
-                <DetailRow label="Failure behaviour" value={selected.failure_behavior} />
-                <DetailRow label="Used by" value={selected.used_by} />
-                <Button
-                  variant={selected.status === "active" ? "destructive" : "default"}
-                  size="sm"
-                  disabled={pending === selected.id}
-                  onClick={() => toggleStatus(selected)}
-                >
-                  {selected.status === "active" ? "Disable tool" : "Enable tool"}
-                </Button>
+                <DetailRow label="Approval required" value={selected.requires_approval ? "Yes" : "No"} />
+                <DetailRow label="Status" value={selected.is_active ? "Active" : "Disabled"} />
+                <DetailRow label="Registered" value={new Date(selected.created_at).toLocaleDateString()} />
               </div>
             </>
           )}
         </SheetContent>
       </Sheet>
-    </div>
-  )
-}
-
-function SchemaBlock({ label, fields }: { label: string; fields: SchemaField[] }) {
-  return (
-    <div>
-      <p className="mb-1.5 text-sm font-medium text-muted-foreground">{label}</p>
-      <div className="flex flex-col gap-1 rounded-md border border-border bg-muted/40 px-2.5 py-2 font-mono text-sm">
-        {fields.map((f) => (
-          <div key={f.name} className="flex justify-between gap-3">
-            <span className="text-foreground">{f.name}</span>
-            <span className="text-muted-foreground">{f.type}</span>
-          </div>
-        ))}
-      </div>
     </div>
   )
 }
