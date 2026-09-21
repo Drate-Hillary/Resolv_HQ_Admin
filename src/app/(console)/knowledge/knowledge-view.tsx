@@ -15,20 +15,20 @@ import {
 
 export interface KnowledgeDocumentRow {
   id: string
-  name: string
-  file_type: "PDF" | "DOCX" | "MD"
-  source: string
-  status: "indexed" | "indexing" | "error"
-  storage_path: string | null
-  chunk_count: number
-  added_by: string | null
-  added_at: string
+  title: string
+  content: string | null
+  file_url: string | null
+  file_type: string | null
+  status: "draft" | "published" | "archived"
+  uploaded_by: string | null
+  created_at: string
+  updated_at: string
 }
 
-const statusVariant: Record<KnowledgeDocumentRow["status"], "approve" | "default" | "destructive"> = {
-  indexed: "approve",
-  indexing: "default",
-  error: "destructive",
+const statusVariant: Record<KnowledgeDocumentRow["status"], "approve" | "default" | "secondary"> = {
+  published: "approve",
+  draft: "default",
+  archived: "secondary",
 }
 
 export function KnowledgeView({ initialDocuments }: { initialDocuments: KnowledgeDocumentRow[] }) {
@@ -37,25 +37,23 @@ export function KnowledgeView({ initialDocuments }: { initialDocuments: Knowledg
   const [selected, setSelected] = useState<KnowledgeDocumentRow | null>(null)
   const [uploading, setUploading] = useState(false)
 
-  const filtered = documents.filter((d) => d.name.toLowerCase().includes(query.toLowerCase()))
+  const filtered = documents.filter((d) => d.title.toLowerCase().includes(query.toLowerCase()))
 
   const uploadDocument = async () => {
     setUploading(true)
     try {
       const { data } = await apiClient.post<KnowledgeDocumentRow>("/admin/knowledge", {
-        name: "Untitled upload.pdf",
-        file_type: "PDF",
-        source: "Manual upload",
-        status: "indexing",
+        title: "Untitled document",
+        status: "draft",
       })
       setDocuments((prev) => [data, ...prev])
 
-      // The backend flips this same row to "indexed" (chunk_count 14) about
-      // 1.8s after creating it (see admin/knowledge.ts) — mirrored here
-      // optimistically so the UI updates without a second round trip.
+      // The backend flips this same row to "published" about 1.8s after
+      // creating it (see admin/knowledge.ts) — mirrored here optimistically
+      // so the UI updates without a second round trip.
       setTimeout(() => {
         setDocuments((prev) =>
-          prev.map((d) => (d.id === data.id ? { ...d, status: "indexed", chunk_count: 14 } : d))
+          prev.map((d) => (d.id === data.id ? { ...d, status: "published" } : d))
         )
       }, 1800)
     } finally {
@@ -92,11 +90,9 @@ export function KnowledgeView({ initialDocuments }: { initialDocuments: Knowledg
         <table className="w-full min-w-150 text-left text-xs">
           <thead>
             <tr className="border-b border-border text-sm text-muted-foreground">
-              <th className="px-4 py-2.5 font-medium">Name</th>
+              <th className="px-4 py-2.5 font-medium">Title</th>
               <th className="px-4 py-2.5 font-medium">Type</th>
-              <th className="px-4 py-2.5 font-medium">Chunks</th>
               <th className="px-4 py-2.5 font-medium">Added</th>
-              <th className="px-4 py-2.5 font-medium">Source</th>
               <th className="px-4 py-2.5 font-medium">Status</th>
             </tr>
           </thead>
@@ -109,12 +105,10 @@ export function KnowledgeView({ initialDocuments }: { initialDocuments: Knowledg
               >
                 <td className="flex items-center gap-2 px-4 py-2.5 font-medium text-foreground">
                   <Icon icon={File02Icon} size={19} className="text-muted-foreground" />
-                  {doc.name}
+                  {doc.title}
                 </td>
-                <td className="px-4 py-2.5 text-muted-foreground">{doc.file_type}</td>
-                <td className="tabular px-4 py-2.5 text-muted-foreground">{doc.chunk_count}</td>
-                <td className="px-4 py-2.5 text-muted-foreground">{new Date(doc.added_at).toLocaleDateString()}</td>
-                <td className="px-4 py-2.5 text-muted-foreground">{doc.source}</td>
+                <td className="px-4 py-2.5 text-muted-foreground">{doc.file_type ?? "—"}</td>
+                <td className="px-4 py-2.5 text-muted-foreground">{new Date(doc.created_at).toLocaleDateString()}</td>
                 <td className="px-4 py-2.5">
                   <Badge variant={statusVariant[doc.status]}>{doc.status}</Badge>
                 </td>
@@ -122,7 +116,7 @@ export function KnowledgeView({ initialDocuments }: { initialDocuments: Knowledg
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
+                <td colSpan={4} className="px-4 py-6 text-center text-muted-foreground">
                   No documents match &ldquo;{query}&rdquo;.
                 </td>
               </tr>
@@ -159,15 +153,13 @@ export function KnowledgeView({ initialDocuments }: { initialDocuments: Knowledg
           {selected && (
             <>
               <SheetHeader>
-                <SheetTitle>{selected.name}</SheetTitle>
-                <SheetDescription>
-                  {selected.file_type} · {selected.chunk_count} chunks
-                </SheetDescription>
+                <SheetTitle>{selected.title}</SheetTitle>
+                <SheetDescription>{selected.file_type ?? "Document"}</SheetDescription>
               </SheetHeader>
               <div className="flex flex-col gap-3 px-6 pb-6 text-sm">
-                <DetailRow label="Source / provenance" value={selected.source} />
-                <DetailRow label="Date added" value={new Date(selected.added_at).toLocaleDateString()} />
-                <DetailRow label="Indexing status" value={selected.status} />
+                <DetailRow label="Date added" value={new Date(selected.created_at).toLocaleDateString()} />
+                <DetailRow label="Status" value={selected.status} />
+                {selected.content && <DetailRow label="Content" value={selected.content.slice(0, 300)} />}
               </div>
             </>
           )}

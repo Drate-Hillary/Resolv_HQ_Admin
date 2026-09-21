@@ -4,7 +4,6 @@ import * as React from "react"
 import Link from "next/link"
 
 import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
 import {
   Sidebar,
@@ -21,13 +20,8 @@ import {
   Robot02Icon,
   Knowledge01Icon,
   Wrench01Icon,
-  AiBrain01Icon,
-  Chart01Icon,
   Activity03Icon,
-  Shield01Icon,
-  Settings02Icon,
-  File02Icon,
-  Time01Icon,
+  CpuIcon,
 } from "@hugeicons/core-free-icons"
 
 const data = {
@@ -36,17 +30,10 @@ const data = {
     { title: "Agent Workspace", url: "/agent", icon: <HugeiconsIcon icon={Robot02Icon} strokeWidth={2} /> },
     { title: "Knowledge Base", url: "/knowledge", icon: <HugeiconsIcon icon={Knowledge01Icon} strokeWidth={2} /> },
     { title: "Tools", url: "/tools", icon: <HugeiconsIcon icon={Wrench01Icon} strokeWidth={2} /> },
-    { title: "Memory", url: "/memory", icon: <HugeiconsIcon icon={AiBrain01Icon} strokeWidth={2} /> },
-    { title: "Help Articles", url: "/help-articles", icon: <HugeiconsIcon icon={File02Icon} strokeWidth={2} /> },
+    { title: "AI Models", url: "/providers", icon: <HugeiconsIcon icon={CpuIcon} strokeWidth={2} /> },
   ],
   navGovernance: [
-    { title: "Evaluations", url: "/evaluations", icon: <HugeiconsIcon icon={Chart01Icon} strokeWidth={2} /> },
     { title: "Traces & Logs", url: "/traces", icon: <HugeiconsIcon icon={Activity03Icon} strokeWidth={2} /> },
-    { title: "Guardrails", url: "/guardrails", icon: <HugeiconsIcon icon={Shield01Icon} strokeWidth={2} /> },
-    { title: "Activity Log", url: "/activity", icon: <HugeiconsIcon icon={Time01Icon} strokeWidth={2} /> },
-  ],
-  navSecondary: [
-    { title: "Settings", url: "/settings", icon: <HugeiconsIcon icon={Settings02Icon} strokeWidth={2} /> },
   ],
 }
 
@@ -76,7 +63,6 @@ export function AppSidebar({
       <SidebarContent>
         <NavMain label="Operate" items={data.navMain} />
         <NavMain label="Governance" items={data.navGovernance} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} />

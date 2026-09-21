@@ -15,7 +15,6 @@ interface ConsoleState {
   messages: WorkspaceMessage[]
   selectedStepKey: RunStepKey | null
   runId: string | null
-  stepIdByKey: Record<string, string>
   approvalId: string | null
   runAgent: (request: string) => Promise<void>
   selectStep: (key: RunStepKey | null) => void
@@ -38,11 +37,12 @@ const statusForStep: Partial<Record<RunStepKey, AgentStatus>> = {
 
 /**
  * Drives the same scripted step-by-step reveal the demo always had (there's
- * no real LLM behind this yet), but every step of it now writes a real row
- * through the backend API: agent_runs, agent_steps, tool_executions and —
- * at the approval gate — agent_approvals. approve()/reject() decide that
- * same row through the backend instead of only flipping local state; the
- * backend logs the decision to admin_activity_logs itself.
+ * no real LLM behind this yet), but every step of it now writes into the
+ * one agent_runs row through the backend API — current_step, and (for the
+ * tool step) tool_name/tool_input/tool_output — instead of a separate
+ * agent_steps/tool_executions table, which no longer exist. At the
+ * approval gate it opens an agent_approvals row; approve()/reject() decide
+ * that same row through the backend.
  *
  * Every persistence call below is best-effort: if the backend request
  * fails (or a run couldn't be started at all), the scripted reveal keeps
@@ -54,7 +54,6 @@ export const useConsoleStore = create<ConsoleState>((set, get) => ({
   messages: [],
   selectedStepKey: null,
   runId: null,
-  stepIdByKey: {},
   approvalId: null,
 
   selectStep: (key) => set({ selectedStepKey: key }),
@@ -69,17 +68,13 @@ export const useConsoleStore = create<ConsoleState>((set, get) => ({
       status: "thinking",
       selectedStepKey: null,
       runId: null,
-      stepIdByKey: {},
       approvalId: null,
       messages: [...get().messages, { id: `local-${nextId++}`, role: "user", content: request }],
     })
 
     try {
-      const { data } = await apiClient.post<{ run: { id: string }; stepIdByKey: Record<string, string> }>(
-        "/admin/agent-runs",
-        { title: request }
-      )
-      set({ runId: data.run.id, stepIdByKey: data.stepIdByKey })
+      const { data } = await apiClient.post<{ run: { id: string } }>("/admin/agent-runs", {})
+      set({ runId: data.run.id })
     } catch {
       // No run persisted — the reveal below still plays out locally.
     }
@@ -90,26 +85,23 @@ export const useConsoleStore = create<ConsoleState>((set, get) => ({
       set({ status: statusForStep[step.key] ?? "thinking" })
       await wait(550)
 
-      const { runId, stepIdByKey } = get()
-      const stepId = stepIdByKey[step.key]
+      const { runId } = get()
 
       if (step.key === "approval") {
         setStepStatus(set, step.key, "blocked")
         set({ status: "awaiting_approval" })
 
-        if (runId && stepId) {
-          await apiClient.patch(`/admin/agent-runs/${runId}/steps/${stepId}`, { status: "blocked" }).catch(() => {})
+        if (runId) {
+          await apiClient
+            .patch(`/admin/agent-runs/${runId}`, { status: "awaiting_approval", currentStep: step.key })
+            .catch(() => {})
         }
 
         if (runId && step.detail?.type === "approval") {
           try {
             const { data: approval } = await apiClient.post<{ id: string }>(`/admin/agent-runs/${runId}/approvals`, {
-              stepId: stepId ?? null,
-              action: step.detail.action,
-              description: step.detail.action,
-              risk: step.detail.risk,
-              amount: step.detail.amount ?? null,
-              currency: step.detail.currency ?? null,
+              requestedAction: step.detail.action,
+              reason: `Risk: ${step.detail.risk}${step.detail.amount != null ? ` · ${step.detail.amount} ${step.detail.currency ?? ""}`.trim() : ""}`,
             })
             set({ approvalId: approval.id })
           } catch {
@@ -120,23 +112,12 @@ export const useConsoleStore = create<ConsoleState>((set, get) => ({
       }
 
       setStepStatus(set, step.key, "done")
-      if (runId && stepId) {
-        await apiClient
-          .patch(`/admin/agent-runs/${runId}/steps/${stepId}`, { status: "done", detail: step.detail ?? null })
-          .catch(() => {})
-      }
-
-      if (step.key === "tool" && step.detail?.type === "tool" && runId) {
-        await apiClient
-          .post(`/admin/agent-runs/${runId}/tool-executions`, {
-            stepId: stepId ?? null,
-            toolName: step.detail.name,
-            input: step.detail.input,
-            output: step.detail.output,
-            status: step.detail.status,
-            durationMs: step.detail.durationMs,
-          })
-          .catch(() => {})
+      if (runId) {
+        const toolFields =
+          step.key === "tool" && step.detail?.type === "tool"
+            ? { toolName: step.detail.name, toolInput: step.detail.input, toolOutput: step.detail.output }
+            : {}
+        await apiClient.patch(`/admin/agent-runs/${runId}`, { currentStep: step.key, ...toolFields }).catch(() => {})
       }
     }
   },
@@ -146,7 +127,7 @@ export const useConsoleStore = create<ConsoleState>((set, get) => ({
     updateApproval(set, "approved")
     set({ status: "using_tool" })
 
-    const { approvalId, runId, stepIdByKey } = get()
+    const { approvalId, runId } = get()
 
     if (approvalId) {
       await apiClient.patch(`/admin/approvals/${approvalId}/approve`).catch(() => {})
@@ -154,23 +135,15 @@ export const useConsoleStore = create<ConsoleState>((set, get) => ({
 
     await wait(700)
     setStepStatus(set, "approval", "done")
-    if (runId && stepIdByKey.approval) {
-      await apiClient.patch(`/admin/agent-runs/${runId}/steps/${stepIdByKey.approval}`, { status: "done" }).catch(() => {})
-    }
 
     setStepStatus(set, "result", "active")
     await wait(500)
     const summary = "Requisition approved and sent to the supplier. Manager sign-off recorded."
     updateResultSummary(set, summary)
     setStepStatus(set, "result", "done")
-    if (runId && stepIdByKey.result) {
-      await apiClient
-        .patch(`/admin/agent-runs/${runId}/steps/${stepIdByKey.result}`, { status: "done", detail: { type: "result", summary } })
-        .catch(() => {})
-    }
     if (runId) {
       await apiClient
-        .patch(`/admin/agent-runs/${runId}`, { status: "completed", completedAt: new Date().toISOString() })
+        .patch(`/admin/agent-runs/${runId}`, { status: "completed", currentStep: "result", completedAt: new Date().toISOString() })
         .catch(() => {})
     }
 
@@ -191,30 +164,22 @@ export const useConsoleStore = create<ConsoleState>((set, get) => ({
     if (get().status !== "awaiting_approval") return
     updateApproval(set, "rejected")
 
-    const { approvalId, runId, stepIdByKey } = get()
+    const { approvalId, runId } = get()
 
     if (approvalId) {
       await apiClient.patch(`/admin/approvals/${approvalId}/reject`).catch(() => {})
     }
 
     setStepStatus(set, "approval", "failed")
-    if (runId && stepIdByKey.approval) {
-      await apiClient.patch(`/admin/agent-runs/${runId}/steps/${stepIdByKey.approval}`, { status: "failed" }).catch(() => {})
-    }
 
     setStepStatus(set, "result", "active")
     await wait(500)
     const summary = "Requisition rejected by manager. Draft discarded, no purchase was made."
     updateResultSummary(set, summary)
     setStepStatus(set, "result", "done")
-    if (runId && stepIdByKey.result) {
-      await apiClient
-        .patch(`/admin/agent-runs/${runId}/steps/${stepIdByKey.result}`, { status: "done", detail: { type: "result", summary } })
-        .catch(() => {})
-    }
     if (runId) {
       await apiClient
-        .patch(`/admin/agent-runs/${runId}`, { status: "failed", completedAt: new Date().toISOString() })
+        .patch(`/admin/agent-runs/${runId}`, { status: "failed", currentStep: "result", completedAt: new Date().toISOString() })
         .catch(() => {})
     }
 

@@ -7,6 +7,7 @@ import { useAdminStore } from "@/lib/stores/admin-store"
 import type { AdminTicket } from "@/types"
 
 const priorityVariant = {
+  urgent: "priority-high",
   high: "priority-high",
   medium: "priority-medium",
   low: "priority-low",
@@ -41,7 +42,7 @@ export function AdminHeader({ ticket }: { ticket: AdminTicket }) {
         {ticket.requestId && (
           <select
             aria-label="Assign to admin"
-            value={ticket.assignedAdminId ?? ""}
+            value={ticket.assignedAgentId ?? ""}
             onChange={(e) => {
               if (ticket.requestId) void assignAdmin(ticket.requestId, e.target.value || null)
             }}
