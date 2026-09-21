@@ -1,8 +1,11 @@
 import { apiFetch } from "@/backend/api/server"
-import { KnowledgeView, type KnowledgeDocumentRow } from "./knowledge-view"
+import { KnowledgeView, type KnowledgeCategoryRow, type KnowledgeDocumentRow } from "./knowledge-view"
 
 export default async function KnowledgeBasePage() {
-  const documents = await apiFetch<KnowledgeDocumentRow[]>("/admin/knowledge")
+  const [documents, categories] = await Promise.all([
+    apiFetch<KnowledgeDocumentRow[]>("/admin/knowledge"),
+    apiFetch<KnowledgeCategoryRow[]>("/admin/knowledge-categories"),
+  ])
 
-  return <KnowledgeView initialDocuments={documents} />
+  return <KnowledgeView initialDocuments={documents} initialCategories={categories} />
 }

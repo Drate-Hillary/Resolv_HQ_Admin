@@ -87,7 +87,7 @@ export function ToolsView({ initialTools }: { initialTools: AgentToolRow[] }) {
               <div className="flex flex-col gap-4 px-6 pb-6 text-sm">
                 <DetailRow label="Approval required" value={selected.requires_approval ? "Yes" : "No"} />
                 <DetailRow label="Status" value={selected.is_active ? "Active" : "Disabled"} />
-                <DetailRow label="Registered" value={new Date(selected.created_at).toLocaleDateString()} />
+                <DetailRow label="Registered" value={new Date(selected.created_at).toLocaleDateString("en-US")} />
               </div>
             </>
           )}
