@@ -442,15 +442,15 @@ export function KnowledgeView({
       <div className="glass-panel p-4">
         <h3 className="text-xs font-medium text-muted-foreground">Example grounded answer</h3>
         <p className="mt-2 text-xs/relaxed text-foreground">
-          &ldquo;Based on the Procurement Policy, requisitions over 25 USD equivalent require manager
-          approval, and any purchase must compare at least two supplier quotations before submission.&rdquo;
+          &ldquo;A login failure right after a password reset should clear within 15 minutes; if it
+          persists, escalate to a support technician rather than retrying the reset.&rdquo;
         </p>
         <div className="mt-3">
           <p className="mb-1.5 text-sm font-medium text-muted-foreground">Sources</p>
           <div className="flex flex-col gap-1.5">
             {[
-              { doc: "Procurement Policy", loc: "Page 12 · §4.2 Approval thresholds" },
-              { doc: "Quotation Evaluation Criteria", loc: "Page 3 · §1.0 Minimum quotations" },
+              { doc: "Account Access Troubleshooting Guide", loc: "Page 4 · §2.1 Password reset issues" },
+              { doc: "Support Escalation Policy", loc: "Page 2 · §3.0 When to escalate" },
             ].map((s) => (
               <div key={s.doc} className="flex items-center gap-2 rounded-md border border-border px-2.5 py-2 text-sm">
                 <Icon icon={CheckmarkCircle02Icon} size={18} className="shrink-0 text-approve" />

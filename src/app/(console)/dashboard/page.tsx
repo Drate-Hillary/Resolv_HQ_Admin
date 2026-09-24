@@ -53,7 +53,7 @@ export default async function DashboardPage() {
       <div>
         <h2 className="text-lg font-semibold tracking-tight text-foreground">Agent Command Center</h2>
         <p className="mt-1 text-xs text-muted-foreground">
-          Monitor the procurement agent&rsquo;s workflows, decisions, tools and knowledge.
+          Monitor the support agent&rsquo;s workflows, decisions, tools and knowledge.
         </p>
       </div>
 
