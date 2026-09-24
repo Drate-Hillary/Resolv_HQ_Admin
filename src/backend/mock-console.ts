@@ -8,10 +8,13 @@ import type { RunStep } from "@/types/console"
 // step-by-step reveal, which stays client-side (see console-store.ts).
 
 /** The canonical demo run: a fresh agent-workspace pipeline for the
- * procurement scenario, all steps pending. `runAgent` in the console
- * store advances each step in order and fills in its detail — swap that
- * simulation for a real streaming run (SSE/websocket) once the backend
- * exists; this fixture defines the exact shape each event should produce. */
+ * support-request triage scenario — the same tools and boundary the real
+ * backend implements (see resolv-hq-backend/src/lib/agent-tools.ts and
+ * docs/ai-boundary-matrix.md) — all steps pending. `runAgent` in the
+ * console store advances each step in order and fills in its detail —
+ * swap that simulation for a real streaming run (SSE/websocket) once the
+ * backend exposes one; this fixture defines the exact shape each event
+ * should produce. */
 export function buildDemoRun(request: string): RunStep[] {
   return [
     { key: "request", label: "Request received", status: "pending", detail: { type: "request", text: request } },
@@ -19,7 +22,7 @@ export function buildDemoRun(request: string): RunStep[] {
       key: "context",
       label: "Context assembled",
       status: "pending",
-      detail: { type: "context", note: "Loaded department memory: preferred suppliers, standing budget code CS-OPEX-2026." },
+      detail: { type: "context", note: "Loaded the caller's own account and open requests — no other customer's data is visible to this run." },
     },
     {
       key: "retrieval",
@@ -27,13 +30,12 @@ export function buildDemoRun(request: string): RunStep[] {
       status: "pending",
       detail: {
         type: "retrieval",
-        query: "laptop purchase requirements and approval thresholds",
-        relevance: 92,
+        query: "steps for resolving a login failure after a password reset",
+        relevance: 91,
         sources: [
-          { doc: "Procurement Policy", location: "§2.3 Purchase thresholds", grounded: true },
-          { doc: "Inventory Handbook", location: "§1.1 Reorder rules", grounded: true },
-          { doc: "Supplier Guidelines", location: "§3.0 Approved vendors", grounded: true },
-          { doc: "Finance Approval Matrix", location: "Table 2", grounded: true },
+          { doc: "Account Access Troubleshooting Guide", location: "§2.1 Password reset issues", grounded: true },
+          { doc: "Service Status FAQ", location: "§1.0 Checking your account status", grounded: true },
+          { doc: "Support Escalation Policy", location: "§3.0 When to escalate to a technician", grounded: true },
         ],
       },
     },
@@ -43,7 +45,11 @@ export function buildDemoRun(request: string): RunStep[] {
       status: "pending",
       detail: {
         type: "plan",
-        steps: ["Check current inventory", "Compare supplier quotations", "Prepare a draft requisition"],
+        steps: [
+          "Search the knowledge base for password-reset troubleshooting steps",
+          "Check the caller's own account status",
+          "Draft an escalation ticket if the issue isn't resolved by self-service steps",
+        ],
       },
     },
     {
@@ -52,11 +58,11 @@ export function buildDemoRun(request: string): RunStep[] {
       status: "pending",
       detail: {
         type: "tool",
-        name: "Inventory Lookup",
-        input: { product_id: "LAPTOP-001" },
-        output: { quantity: 12, reorder_required: false },
+        name: "account_status_lookup",
+        input: {},
+        output: { status: "active", openRequests: 1 },
         status: "success",
-        durationMs: 423,
+        durationMs: 340,
       },
     },
     {
@@ -65,7 +71,7 @@ export function buildDemoRun(request: string): RunStep[] {
       status: "pending",
       detail: {
         type: "observation",
-        note: "12 units on hand, below the 20-unit department target — proceeding to compare quotations.",
+        note: "Account is active and in good standing — the login failure isn't caused by a suspended account, so the password-reset walkthrough alone may not resolve it.",
       },
     },
     {
@@ -74,7 +80,7 @@ export function buildDemoRun(request: string): RunStep[] {
       status: "pending",
       detail: {
         type: "decision",
-        note: "Quotation Comparison ranked Kampala Tech Supplies lowest at 2,450,000 UGX for 12 units. Drafting a requisition for manager review.",
+        note: "Self-service troubleshooting didn't resolve a persistent login failure — drafting an escalation ticket for a support technician to review the account directly.",
       },
     },
     {
@@ -83,10 +89,8 @@ export function buildDemoRun(request: string): RunStep[] {
       status: "pending",
       detail: {
         type: "approval",
-        action: "Submit purchase requisition to Kampala Tech Supplies",
-        risk: "medium",
-        amount: 2450000,
-        currency: "UGX",
+        action: "Create escalation ticket: \"Persistent login failure after password reset\"",
+        risk: "low",
         status: "pending",
       },
     },
@@ -94,7 +98,7 @@ export function buildDemoRun(request: string): RunStep[] {
       key: "result",
       label: "Final result",
       status: "pending",
-      detail: { type: "result", summary: "Requisition drafted and sent for approval. Awaiting manager decision." },
+      detail: { type: "result", summary: "Escalation ticket drafted and sent for approval. Awaiting staff decision." },
     },
   ]
 }

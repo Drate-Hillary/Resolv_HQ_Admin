@@ -1,8 +1,8 @@
 # RESOLV-HQ
 
-A Next.js console for a bounded, read-only-tool procurement assistant — the ReAct-style agent pipeline (model → RAG → tools → agent loop → memory → evaluation → observability → guardrails) built out as a real, navigable UI so every Week 2 deliverable has a working surface to point at, not just a document.
+A Next.js console for a bounded, read-only-tool customer/staff support-request triage assistant — the ReAct-style agent pipeline (model → RAG → tools → agent loop → memory → evaluation → observability → guardrails) built out as a real, navigable UI so every Week 2 deliverable has a working surface to point at, not just a document.
 
-The worked domain is a university department's procurement assistant: it can look up inventory, compare supplier quotations, search policy documents, and draft a requisition — but it can never submit a purchase, approve one, release a payment, or change a permission on its own. Those actions always stop for a human (see [Guardrails](#guardrails--boundary-matrix)).
+The worked domain is a support-request triage assistant: it can answer questions from an approved knowledge base, look up the caller's own account/request status, and draft an escalation ticket — but it can never issue a refund, change billing or account details, cancel a service, or take any other state-changing action on its own. Those actions always stop for a human (see [Guardrails](#guardrails--boundary-matrix)).
 
 ## Tech stack
 

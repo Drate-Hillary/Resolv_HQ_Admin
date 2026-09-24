@@ -8,14 +8,15 @@ import { Icon } from "@/components/ui/icon";
 import { CheckmarkCircle02Icon, Cancel01Icon, SparklesIcon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/backend/supabase/client";
 
-// Real excerpt from the seeded boundary matrix (supabase/seed.sql →
-// guardrail_rules) — what this console actually is, shown before a
-// single field is filled in, not decorative copy.
+// Mirrors the boundary matrix enforced in resolv-hq-backend (see
+// docs/ai-boundary-matrix.md and system-prompt-spec.md §4) — what this
+// console actually is, shown before a single field is filled in, not
+// decorative copy.
 const BOUNDARY_ROWS = [
-  { capability: "Draft a requisition", aiAllowed: true },
-  { capability: "Submit a purchase requisition", aiAllowed: false },
-  { capability: "Approve a purchase requisition", aiAllowed: false },
-  { capability: "Release a financial transaction", aiAllowed: false },
+  { capability: "Draft an escalation ticket", aiAllowed: true },
+  { capability: "Issue a refund", aiAllowed: false },
+  { capability: "Change billing or account details", aiAllowed: false },
+  { capability: "Cancel a service", aiAllowed: false },
 ];
 
 export default function LoginPage() {
@@ -69,12 +70,12 @@ function LoginForm() {
 
         <div className="max-w-md">
           <h1 className="font-(family-name:--font-space-grotesk) text-[2.25rem] leading-[1.15] font-medium text-balance">
-            A procurement agent that never signs its own name.
+            A support agent that never signs its own name.
           </h1>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground text-pretty">
-            It can look up inventory, compare quotations, and draft a
-            requisition on its own. Everything below always stops for a
-            person.
+            It can search the knowledge base, check your account and request
+            status, and draft an escalation ticket on its own. Everything
+            below always stops for a person.
           </p>
 
           <dl className="mt-8 border-t divide-y divide-border border-border">

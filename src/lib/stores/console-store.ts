@@ -138,7 +138,8 @@ export const useConsoleStore = create<ConsoleState>((set, get) => ({
 
     setStepStatus(set, "result", "active")
     await wait(500)
-    const summary = "Requisition approved and sent to the supplier. Manager sign-off recorded."
+    const action = approvalAction(get())
+    const summary = `${action} — approved and completed.`
     updateResultSummary(set, summary)
     setStepStatus(set, "result", "done")
     if (runId) {
@@ -154,7 +155,7 @@ export const useConsoleStore = create<ConsoleState>((set, get) => ({
         {
           id: `local-${nextId++}`,
           role: "agent",
-          content: "Approved — the requisition has been sent to Kampala Tech Supplies. I'll update the case memory.",
+          content: `Approved — "${action}" is complete. I'll update the case memory.`,
         },
       ],
     }))
@@ -174,7 +175,8 @@ export const useConsoleStore = create<ConsoleState>((set, get) => ({
 
     setStepStatus(set, "result", "active")
     await wait(500)
-    const summary = "Requisition rejected by manager. Draft discarded, no purchase was made."
+    const action = approvalAction(get())
+    const summary = `${action} — rejected. No action was taken.`
     updateResultSummary(set, summary)
     setStepStatus(set, "result", "done")
     if (runId) {
@@ -190,7 +192,7 @@ export const useConsoleStore = create<ConsoleState>((set, get) => ({
         {
           id: `local-${nextId++}`,
           role: "agent",
-          content: "Understood — I've discarded the draft requisition and logged the rejection for next time.",
+          content: "Understood — I've discarded the draft and logged the rejection for next time.",
         },
       ],
     }))
@@ -199,6 +201,11 @@ export const useConsoleStore = create<ConsoleState>((set, get) => ({
 
 function setStepStatus(set: (fn: (s: ConsoleState) => Partial<ConsoleState>) => void, key: RunStepKey, status: RunStep["status"]) {
   set((s) => ({ run: s.run.map((step) => (step.key === key ? { ...step, status } : step)) }))
+}
+
+function approvalAction(state: ConsoleState): string {
+  const step = state.run.find((s) => s.key === "approval")
+  return step?.detail?.type === "approval" ? step.detail.action : "The requested action"
 }
 
 function updateApproval(set: (fn: (s: ConsoleState) => Partial<ConsoleState>) => void, status: "approved" | "rejected") {
