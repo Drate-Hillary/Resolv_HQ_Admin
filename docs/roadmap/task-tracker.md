@@ -26,6 +26,18 @@ The brief wants at least one tool that either reads live application data or per
 **Human approval gate before higher-impact action** *(Week 4/7 · Owner: QSL)*
 Any AI-proposed action with real consequence must stop for a human before it takes effect. `agent_approvals` (table) + `routes/admin/approvals.ts` (queue endpoints) + `decideApproval()` (the single choke point every approval passes through) form a working, auditable gate — nothing the agent drafts can become real without a staff decision recorded here.
 
+**Domain conflict resolved across README + docs + console** *(Week 4 · Owner: PRL + AIL)*
+Previously the single most consequential open item: `resolv-hq/README.md` and its docs described a procurement assistant that only ever existed as a scripted demo, while the real backend and customer app implement a support-request triage agent. Resolved 25 Sept — see [`../domain-conflict-resolution.md`](../domain-conflict-resolution.md) for the full file-by-file account. `README.md`, `src/backend/mock-console.ts`, `console-store.ts`, the login page, the knowledge page, and the dashboard subtitle were all rewritten to the support domain, and the same correction was carried through `model-selection-note.md`, `prompt-specification.md`, and `evaluation-table.md` (including fixing a pre-existing arithmetic error in the evaluation summary and several dead route/file references). A repo-wide grep for procurement-domain language now returns zero matches, and `npx tsc --noEmit` is clean.
+
+**Tool Catalogue explicitly labeled/indexed** *(Week 4 · Owner: AEL)*
+[`../tool-catalogue.md`](../tool-catalogue.md) — purpose, exact JSON schema, authorization model, and failure behaviour for all four tools, indexed under the name the brief expects a grader to find.
+
+**Failure/authorization test evidence captured** *(Week 4 · Owner: QSL)*
+[`../tool-failure-auth-test-evidence.md`](../tool-failure-auth-test-evidence.md) — real, executed output (via `tsx` against the actual `agent-tools.ts`, not a hypothetical description) for a missing-required-parameter call, a cross-customer authorization check, an unrecognized-tool call, and an ungrounded query. Also surfaced a genuine keyword-overlap retrieval weakness along the way, logged for the Week 7 Failure Catalogue.
+
+**Architecture diagram — first version** *(Weeks 1/3/4 · Owner: AIL)*
+[`../architecture-diagram.md`](../architecture-diagram.md) — no diagram existed anywhere in the workspace before this; now covers client surfaces through the LLM gateway, ReAct loop, the four agent tools, the boundary matrix, and the approval queue, in Mermaid so it can be extended in place. Counts as done for Weeks 1/3/4's asks; **still needs the Week 5 extension** (expanding the ReAct node into its own five-phase subgraph) — tracked in Pending below rather than closed outright, since the brief expects this diagram to keep growing through Week 7.
+
 **Multi-step bounded agent loop (Sense→Plan→Act→Observe→Respond)** *(Week 5 · Owner: AEL)*
 This is the brief's Week 5 centerpiece — a workflow where the system decides among approved next actions itself, rather than following a fixed script. `react-agent.ts`'s `runReActLoop()` implements the full cycle and is called from `generateAssistantReply()` in place of the old single-shot completion call. Notably, this was built and committed on 22 Sept — a full week ahead of its nominal slot.
 
@@ -41,7 +53,7 @@ Anything the agent drafts mid-loop (an escalation ticket) routes to the same `ag
 ### 🟡 P2 — solid supporting work
 
 **Model chosen and documented** *(Week 2 · Owner: AEL)*
-The brief wants a specific model recommendation with capability/cost/latency/privacy/access reasoning, not just "we used an LLM." `docs/model-selection-note.md` recommends Claude Sonnet 5 as primary (Haiku 4.5 for low-stakes paths), covering all five dimensions the brief asks for. Solid as written — only needs its one procurement-flavored sentence edited once the domain rewrite (see Pending) happens.
+The brief wants a specific model recommendation with capability/cost/latency/privacy/access reasoning, not just "we used an LLM." `docs/model-selection-note.md` recommends Claude Sonnet 5 as primary (Haiku 4.5 for low-stakes paths), covering all five dimensions the brief asks for. Domain language and dead route references corrected as part of the Week 4 domain-conflict fix.
 
 **≥2 versioned, meaningful prompt iterations** *(Week 2 · Owner: AEL)*
 Prompts have to be treated as versioned artifacts, not edited in place with no history. `prompt-specification.md` documents a v1.0 → v1.1 change driven directly by a real evaluation failure (case 5's unverified false premise) — exactly the "meaningful, evidence-driven iteration" the brief wants, not a cosmetic wording tweak.
@@ -78,9 +90,6 @@ The brief's minimum Week 1 evidence includes a functioning GitHub setup. All thr
 
 ### 🔴 P0 — do these before anything else
 
-**Resolve the domain conflict (procurement vs. support-ticket triage)** *(Week 4 · Owner: PRL + AIL)*
-The single most consequential open item. `resolv-hq/README.md` and its docs describe a procurement assistant (inventory, supplier quotations, requisitions) that exists only as a scripted demo in `mock-console.ts` — while the real backend (`resolv-hq-backend`) and customer app implement a support-ticket triage agent with entirely different tools and data. The brief requires one clearly bounded workflow; right now the project has two, described inconsistently across README, docs, and code. **What's left:** rewrite the README's "worked domain" paragraph, replace or retire the procurement mock script, and carry the same correction through the model-selection-note, prompt spec, and evaluation table (tracked separately below since they're their own artifacts). Until this lands, no downstream evaluation or evidence work can honestly claim to describe "the" system.
-
 **Register a real model API key and confirm one live call** *(Week 2 · Owner: AEL)*
 All the plumbing for a live model call exists (see Completed above) but `system-prompt-spec.md` states outright that no provider API key has been registered or exercised — every response today still falls back to `answerQuestion()`'s keyword matching. **What's left:** add a real Anthropic key via the `/providers` admin page, send one real message through `/chat`, and confirm the response's `providerName`/`model` fields show a live call rather than the fallback. This single step is what makes every later week's evaluation and tracing work meaningful rather than theoretical.
 
@@ -89,20 +98,11 @@ All the plumbing for a live model call exists (see Completed above) but `system-
 **AI Boundary Matrix as a Week 1 planning artifact** *(Week 1 · Owner: PRL)*
 The brief wants the boundary matrix drafted early, as a scoping decision, not discovered after the fact. `ai-boundary-matrix.md` exists and is genuinely thorough, but it's written as a 22 Sept *implementation report* for a specific enforcement task — it never states, up front, "here is what this agent may do / must stay deterministic / needs approval for" in one planning-style table, and it doesn't name the chosen use case. **What's left:** add (or extract into) a short planning table at the top, dated to reflect when the boundary was actually decided, referencing the resolved single use case.
 
-**Prompt Specification rewritten for the correct domain** *(Week 2 · Owner: AEL)*
-`prompt-specification.md` is well-structured (role/task/context/constraints/output/failure) but every constraint is written in procurement language — "never submit a purchase requisition," "refund threshold." **What's left:** a straight rewrite into the support-agent domain (account/request status, escalation drafting) keeping the same structure and the same underlying discipline (never execute an irreversible action, always cite, always refuse to guess).
-
-**10-case evaluation table redone** *(Week 2 · Owner: QSL)*
-`evaluation-table.md` already covers the right categories (normal, edge, incorrect-info, adversarial, tool-unavailable, unauthorized, multi-issue) — the shape of the table is correct. The problem is every scenario is procurement-flavored and was run against the scripted frontend mock, not the real backend or a real model. **What's left:** rewrite the 10 scenarios in the real domain and re-run them once the live model (P0 above) is confirmed, replacing "traced behaviour of the scripted pipeline" with real traced output.
-
-**Tool Catalogue explicitly labeled** *(Week 4 · Owner: AEL)*
-The brief expects a document a grader can find by name — "Tool Catalogue." The actual content (purpose, schema, authorization, failure behaviour for all four tools) already exists in `function-calling-schemas.md`, just under a different name and framing. **What's left:** either rename it, or add a short header/cross-reference so it's discoverable as the deliverable it actually satisfies.
-
-**Failure/authorization test evidence captured** *(Week 4 · Owner: QSL)*
-The brief wants explicit evidence of testing missing parameters, unauthorized requests, and unavailable services — not just working happy-path tools. The underlying protections already exist (per-caller data scoping in `chat.ts`'s loaders, schema-enforced required fields), but nothing captures them as a deliberate test log. **What's left:** a short doc recording three runs — a missing-required-parameter call, an attempt to read another customer's data, and a simulated tool timeout — with what actually happened in each case.
-
 **3 execution traces incl. one failure/recovery case** *(Week 5 · Owner: AEL)*
 The brief wants traces of the *real* agent loop, including a genuine failure and its recovery. `evaluation-table.md` has scenario-level results that gesture at this (e.g., a tool timeout that retried and succeeded), but those are traces of the scripted mock pipeline, not `react-agent.ts` running against a live model. **What's left:** once the live model is confirmed, run three real conversations and save the full traces (messages, tool calls, iteration counts).
+
+**Architecture diagram — Week 5 extension** *(Week 5 · Owner: AIL)*
+The diagram now exists (`docs/architecture-diagram.md`, see Completed) with the client/gateway/tools/boundary/approval layers drawn. **What's left:** expand the `ReAct` node into its own subgraph showing the five-phase Sense→Plan→Act→Observe→Respond cycle and the `MAX_ITERATIONS` stop condition explicitly, per the Agent Task Contract — a small addition to the existing file, not a redraw.
 
 **Persistent memory wired into the agent's context** *(Week 6 · Owner: AEL)*
 This is the one item on the whole tracker that's still a genuine, non-trivial code task rather than documentation or evidence-capture. `customer_memory_facts` exists as a table, but `system-prompt-spec.md` says plainly it "isn't in the assistant's context yet." **What's left:** extend whatever loads a caller's context in `chat.ts`/`ai.ts` to also pull their approved memory facts into the prompt, following the same "informative, never authorizing" rule the spec already lays out for when this gets added.
@@ -145,9 +145,6 @@ Required Week 1 evidence — problem, user, pain point, AI value, scope, assumpt
 
 **8–12 user stories + acceptance criteria** *(Week 1 · Owner: PRL)*
 Not found in-repo. **What's left:** these can be derived retroactively from features that already work — e.g. "As a customer, I want to ask about my request's status without waiting for a reply" (backed by `outage_status_checker`), "As an admin, I want any AI-proposed action to sit in a queue I approve before anything changes" (backed by `agent_approvals`) — rather than invented from a blank page.
-
-**Architecture/context diagram** *(Weeks 1, 3, 4, 5 · Owner: AIL)*
-The brief expects this from Week 1 onward, extended each week as new layers (RAG, tools, agent loop) are added. No diagram — image or Mermaid — exists anywhere in the workspace today. **What's left:** draw one diagram showing customer app → backend API → knowledge base/requests/tools → LLM gateway → approval queue → admin console, then extend the *same* file in later weeks instead of starting fresh each time.
 
 **Week 1 progress report** *(Week 1 · Owner: PRL)*
 Not found — the earliest report on file is Week 2's. **What's left:** write it using the brief's §8 template, noting plainly that it was compiled retrospectively in Week 4 for evidence purposes, with the real completion date stated rather than silently backdated.
@@ -197,7 +194,7 @@ Depends on the domain fix and a genuinely live model being real by then — rehe
 ### 🟡 P2 — important but sequenced after the above
 
 **Failure Catalogue (≥5 failures, re-tested)** *(Week 7 · Owner: QSL)*
-Not compiled yet, but the raw material already exists — "Known limitation" sections are scattered across `ai-boundary-matrix.md`, `function-calling-schemas.md`, `model-abstraction-and-rate-limiting.md`, `clarification-prompting-logic.md`, and `evaluation-table.md`. **What's left:** pull them into one catalogue, add any new failures found while scaling the eval set, and re-test each after a fix — this is compilation, not fresh investigation.
+Not compiled yet, but the raw material already exists — "Known limitation" sections are scattered across `ai-boundary-matrix.md`, `function-calling-schemas.md`, `model-abstraction-and-rate-limiting.md`, `clarification-prompting-logic.md`, and `evaluation-table.md`, plus a new genuine one found during Week 4's tool testing: keyword-overlap retrieval can surface a coincidentally-matching article for an unrelated query instead of correctly reporting no grounding (see `docs/tool-failure-auth-test-evidence.md`). **What's left:** pull them into one catalogue, add any new failures found while scaling the eval set, and re-test each after a fix — this is compilation, not fresh investigation.
 
 **Week 7 progress report** *(Week 7 · Owner: PRL)*
 Future week; not yet due.
@@ -217,10 +214,11 @@ No automated test files exist in any repo. Same reasoning — a handful of manua
 
 ## Suggestions — priority-ordered path to finishing on time
 
-1. **This week (P0, do before anything else):** lock the use-case decision in writing, rewrite `README.md`/`mock-console.ts` to match, register one real model API key, and confirm a live `/chat` call actually reaches it. These two items unblock nearly every ❌ and 🟡 item below them — RAG grounding, evaluation, and traces are all meaningless to finish against a fictional domain or a fallback that isn't a real model call.
-2. **Backfill Week 1 immediately after (P1):** Project Charter, 8–12 user stories, and one architecture diagram — derive the stories from already-built features rather than inventing new ones, and draw the diagram once so it can just be extended in Weeks 3–5 instead of redrawn.
-3. **Close the remaining Week 2–4 documentation debt (P1):** rewrite the prompt spec and evaluation table for the correct domain, label the Tool Catalogue, capture the failure/auth test evidence, and write the Agent Task Contract. Most of this is consolidating content that already exists in implementation reports, not new engineering.
-4. **Wire memory into the agent's context (P1):** this is the one remaining piece of *code* work standing between the project and a fully-covered brief — everything else left is documentation, evaluation volume, or evidence capture.
-5. **Scale evaluation and compile the Failure Catalogue (P2):** grow the 10-case table to 30+ against the real domain and live model, and pull the "Known limitation" notes already scattered across five implementation docs into one catalogue with re-tests.
-6. **Deliberately skip the P3 items unless time is left over:** CI pipeline and an automated E2E suite are good practice but aren't graded — a few manual smoke tests are enough.
-7. **Week 8, last:** fix the git/submodule evidence trail before tagging anything, then assemble the final report and evidence pack — by this point it should be almost entirely pointers into documents that already exist from steps 1–5.
+1. ~~Lock the use-case decision in writing and rewrite `README.md`/`mock-console.ts`/the AI docs to match.~~ **Done 25 Sept** — see [`../domain-conflict-resolution.md`](../domain-conflict-resolution.md).
+2. **This week (P0, the one remaining blocker):** register one real model API key and confirm a live `/chat` call actually reaches it. Everything downstream — RAG grounding, evaluation, traces — is still meaningless to finish against a fallback that isn't a real model call.
+3. **Backfill Week 1 (P1):** Project Charter and 8–12 user stories — derive the stories from already-built features rather than inventing new ones. (The architecture diagram is now done — see item below.)
+4. **Close the remaining documentation debt (P1):** the AI Boundary Matrix still needs its Week 1 planning-table framing, and the Agent Task Contract still needs writing. ~~Rewrite the prompt spec and evaluation table, label the Tool Catalogue, capture the failure/auth test evidence.~~ **Done 25 Sept** as part of the Week 4 close-out.
+5. **Wire memory into the agent's context (P1):** this is the one remaining piece of *code* work standing between the project and a fully-covered brief — everything else left is documentation, evaluation volume, or evidence capture.
+6. **Scale evaluation and compile the Failure Catalogue (P2):** grow the 10-case table to 30+ against the real domain and live model, and pull the "Known limitation" notes already scattered across five implementation docs (now six, including the Week 4 test-evidence doc) into one catalogue with re-tests.
+7. **Deliberately skip the P3 items unless time is left over:** CI pipeline and an automated E2E suite are good practice but aren't graded — a few manual smoke tests are enough.
+8. **Week 8, last:** fix the git/submodule evidence trail before tagging anything, then assemble the final report and evidence pack — by this point it should be almost entirely pointers into documents that already exist from steps 1–6.
