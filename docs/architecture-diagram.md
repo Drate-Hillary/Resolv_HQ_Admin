@@ -20,10 +20,10 @@ flowchart TB
         Loaders["Per-caller context loaders\nloadAccountInput(), requests, knowledge_documents\n— scoped to req.user.id, never client-supplied"]
         Gateway["LLM Gateway — completeWithFallback()\nretry w/ backoff + Redis cache (10 min TTL)"]
         ReAct["ReAct Loop — runReActLoop()\nSense -> Plan -> Act -> Observe -> Respond\nMAX_ITERATIONS = 4"]
-        Tools["Agent Tools (read-only) — agent-tools.ts\nsearch_knowledge_base\naccount_status_lookup\noutage_status_checker\ndraft_escalation_ticket"]
+        Tools["Agent Tools (read-only) — agent-tools.ts\nsearch_knowledge_base\naccount_status_lookup\noutage_status_checker\ndraft_escalation_ticket\nalso exposed as MCP: /mcp (HTTP) + stdio"]
         Boundary["Boundary Matrix\nLayer 1: system-prompt rule\nLayer 2: detectBoundaryViolation() — deterministic backstop"]
         Approvals["Approval Queue\nagent_approvals + decideApproval()"]
-        Memory["customer_memory_facts\n(NOT yet read by the agent — Week 6 gap, see roadmap/week-6.md)"]
+        Memory["customer_memory\n(enabled facts of the verified customer, if master switch on;\nuntrusted prompt context, never authorizes)"]
     end
 
     subgraph Data["Supabase / Postgres"]
@@ -56,7 +56,7 @@ flowchart TB
     ReAct -->|"drafted escalation ticket"| Approvals
     Approvals --> Appr
     Approvals -->|"staff approve / reject"| Console
-    Loaders -.->|"planned, Week 6"| Memory
+    Loaders -->|"Week 6: customer-scoped, flag-gated"| Memory
     API --> Console
     API --> Mobile
 ```
@@ -151,10 +151,10 @@ flowchart LR
 
 ## Reading the diagram
 
-- **Solid arrows** are built and working today; **dashed arrows** are either a safety path that only fires on a violation (Boundary → API) or planned-but-not-built (Loaders → Memory, per the Week 6 gap in the task tracker).
+- **Solid arrows** are built and working today; **dashed arrows** are a safety path that only fires on a violation (Boundary → API) or a fallback path.
 - **`Loaders`** is the single authorization boundary in the whole system: every tool and every prompt context is built from data this one step already scoped to `req.user.id` — no tool has its own selector argument that could name a different caller. See [`tool-failure-auth-test-evidence.md`](./tool-failure-auth-test-evidence.md) for an executed proof of this.
 - **`Claude`** is drawn as reachable today because the gateway code is complete (`model-abstraction-and-rate-limiting.md`) — the box's subtitle notes the one remaining gap (no live API key registered yet) so this diagram doesn't overclaim what's running versus what's wired.
 - **Extend this diagram, don't replace it:**
   - ~~Week 5: expand the `ReAct` node into its own subgraph~~ — done 2 Oct, see the Week 5 extension above.
-  - Week 6: turn the dashed `Loaders -.-> Memory` edge solid once memory is actually wired into context, and add the MCP-style interface annotation to the `Tools` subgraph.
+  - ~~Week 6: turn the `Loaders -> Memory` edge solid and add the MCP-style interface annotation to `Tools`~~ — done 9 Oct. See [`state-model.md`](./state-model.md) and [`mcp-style-interface-spec.md`](./mcp-style-interface-spec.md).
   - Week 7: annotate `Boundary` and `Approvals` with a pointer to the compiled Failure Catalogue and the 30+ scenario evaluation results once they exist.

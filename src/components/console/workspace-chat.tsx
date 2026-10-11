@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "cn"
 import { useConsoleStore } from "@/lib/stores/console-store"
+import { AgentThinkingOrb } from "@/components/console/agent-thinking-orb"
 
 const busyStatuses = ["thinking"]
 
@@ -46,7 +47,7 @@ export function WorkspaceChat() {
         ))}
         {busy && (
           <div className="flex w-fit items-center gap-1.5 rounded-full border border-dashed border-primary/40 bg-primary/5 px-2.5 py-1 text-sm text-primary">
-            <span className="size-1.5 rounded-full bg-primary motion-safe:animate-pulse" />
+            <AgentThinkingOrb />
             Working&hellip;
           </div>
         )}

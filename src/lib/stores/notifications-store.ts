@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import { apiClient } from "@/backend/api/client"
+import { toastError } from "@/lib/errors"
 import { onRealtimeEvent, retainRealtime } from "@/lib/realtime"
 
 export type NotificationType = "request_update" | "ai" | "support" | "completed" | "system"
@@ -57,8 +58,9 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
     set({ items, unreadCount: countUnread(items) })
     try {
       await apiClient.patch(`/notifications/${id}/read`)
-    } catch {
+    } catch (err) {
       set({ items: previous, unreadCount: countUnread(previous) })
+      toastError(err, "Could not mark the notification as read.", "notif-read")
     }
   },
 
@@ -68,8 +70,9 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
     set({ items, unreadCount: 0 })
     try {
       await apiClient.patch("/notifications/read-all")
-    } catch {
+    } catch (err) {
       set({ items: previous, unreadCount: countUnread(previous) })
+      toastError(err, "Could not mark notifications as read.", "notif-read")
     }
   },
 

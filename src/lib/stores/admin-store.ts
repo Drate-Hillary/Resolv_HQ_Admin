@@ -1,5 +1,7 @@
 import { create } from "zustand"
+import { toast } from "sonner"
 import { apiClient } from "@/backend/api/client"
+import { getErrorMessage, toastError } from "@/lib/errors"
 import type { AdminTicket, Escalation, TranscriptEntry } from "@/types"
 
 interface AdminOption {
@@ -49,7 +51,9 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         selectedApprovalId: get().selectedApprovalId || tickets[0]?.approvalId || "",
       })
     } catch (err) {
-      set({ isLoading: false, error: err instanceof Error ? err.message : "Failed to load tickets" })
+      const message = getErrorMessage(err, "Failed to load tickets")
+      set({ isLoading: false, error: message })
+      toast.error(message, { id: "admin-tickets" })
     }
   },
 
@@ -57,8 +61,9 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     try {
       const { data } = await apiClient.get<AdminOption[]>("/admin/approvals/available-admins")
       set({ admins: data })
-    } catch {
+    } catch (err) {
       set({ admins: [] })
+      toastError(err, "Could not load the list of admins.", "admin-list")
     }
   },
 
@@ -79,8 +84,9 @@ export const useAdminStore = create<AdminState>((set, get) => ({
           ? { ...s.transcriptsByRequest, [escalation.requestId]: transcript }
           : s.transcriptsByRequest,
       }))
-    } catch {
+    } catch (err) {
       // Leave unloaded; the panel stays empty until the ticket is re-selected.
+      toastError(err, "Could not load the ticket details.", "admin-detail")
     }
   },
 
@@ -104,8 +110,10 @@ export const useAdminStore = create<AdminState>((set, get) => ({
             }
           : s.escalationsById,
       }))
-    } catch {
+      toast.success("Request approved")
+    } catch (err) {
       set({ isSubmitting: false })
+      toastError(err, "Could not approve the request.")
     }
   },
 
@@ -129,8 +137,10 @@ export const useAdminStore = create<AdminState>((set, get) => ({
             }
           : s.escalationsById,
       }))
-    } catch {
+      toast.success("Request rejected")
+    } catch (err) {
       set({ isSubmitting: false })
+      toastError(err, "Could not reject the request.")
     }
   },
 
@@ -140,8 +150,10 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       set((s) => ({
         tickets: s.tickets.map((t) => (t.requestId === requestId ? { ...t, assignedAgentId: adminId } : t)),
       }))
-    } catch {
+      toast.success(adminId ? "Ticket assigned" : "Ticket unassigned")
+    } catch (err) {
       // Leave the assignment as-is on failure.
+      toastError(err, "Could not update the assignment.")
     }
   },
 }))

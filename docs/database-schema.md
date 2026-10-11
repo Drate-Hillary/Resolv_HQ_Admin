@@ -19,7 +19,7 @@ The second-biggest gap: `EscalationDecision` (`"approved" | "rejected" | "editin
 | **Customer** | CSAT rating on completed requests | `ServiceRequest.csat` (inline nullable object) | `request_feedback`, RLS-restricted to the request's own customer, only once `status = 'completed'` |
 | **Customer** | AI assistant chat | `lib/app-state.tsx` `chatMessages` (lost on reload) | `ai_conversations` / `ai_messages` / `ai_message_sources` |
 | **Customer** | Notifications | `INITIAL_NOTIFICATIONS`, manually pushed by the frontend on every action | `notifications`, now written automatically by a trigger on `requests` status changes — not dependent on the client remembering to call `setNotifications` |
-| **Customer** | Memory preference toggles (Profile > Saved Information) | `MEMORY_FACTS`, `toggleMemoryFact` | `customer_memory_facts` — **kept separate from the agent's operational memory** (see below), customer-owned RLS |
+| **Customer** | Memory preference toggles (Profile > Saved Information) | Saved Information controls | `customer_memory` — customer-owned, account-scoped facts kept separate from staff memory |
 | **Customer** | Help center | `HELP_ARTICLES` hardcoded in the bundle | `help_articles`, editable without a redeploy |
 | **Admin** | Escalation queue, AI summary, evidence, approve/reject | `src/lib/mock-data.ts` `tickets`/`escalations` | Now reads/writes the shared `requests` + `agent_approvals`, so a decision survives a refresh and is auditable (`decided_by`, `decided_at`) |
 | **Admin** | Ticket ownership / assignment | *Not built* — no admin is ever "assigned" a ticket in the mock | `requests.assigned_admin_id`, `admin_profiles.is_available` |
@@ -27,7 +27,7 @@ The second-biggest gap: `EscalationDecision` (`"approved" | "rejected" | "editin
 | **Agent** | Run pipeline (request→context→retrieval→plan→tool→observation→decision→approval→result) | `src/types/console.ts`, simulated client-side in `console-store.ts` | `agent_runs` / `agent_steps`, now linkable to the `request_id` / `conversation_id` that triggered them (today's `AgentRun` has neither) |
 | **Agent** | Tool registry | `mock-console.ts` `tools` | `agent_tools` |
 | **Agent** | Tool call log | Inline in each run's step detail only, not queryable across runs | `tool_executions` |
-| **Agent** | Operational memory (case history, preferred suppliers, budget codes) | `mock-console.ts` `memoryRecords` | `agent_memory_records` — staff-only, **distinct from `customer_memory_facts`** (see below) |
+| **Agent** | Staff-owned memory notes | Memory & MCP console panel | `agent_memory_records` — staff-only, scoped to the signed-in staff member and distinct from customer memory |
 | **Agent** | Knowledge base / RAG | `mock-console.ts` `knowledgeDocuments` | `knowledge_documents` + `knowledge_chunks` with a `vector` column for embeddings |
 | **Agent** | Guardrail rules (AI Boundary Matrix) | `mock-console.ts` `guardrails`, static display only | `guardrail_rules` (the static matrix) **+ `guardrail_events`** (a log of every time a rule actually fired — didn't exist at all; without it, "10 blocked adversarial cases" in `evaluation-table.md` has no real audit trail) |
 | **Agent** | Evaluation scenarios & scores | `mock-console.ts` `evalScenarios`, `evalDimensions` — one static snapshot | `evaluation_scenarios` (the fixed 30 cases) + `evaluation_runs`/`evaluation_results` so **each run of the suite is a row**, making prompt v1.0-vs-v1.1 comparison a query — this is explicitly the Week 3 goal stated in `docs/week-2-progress-report.md` ("re-run … compare real vs. simulated results and note any regressions") |
@@ -43,8 +43,9 @@ The second-biggest gap: `EscalationDecision` (`"approved" | "rejected" | "editin
 
 Your original schema's single `customer_memory` table would have blurred these together:
 
-- **`agent_memory_records`** — operational memory the *agent and admin* use (case history, preferred suppliers, standing budget codes). Staff-only, not customer-visible or editable.
-- **`customer_memory_facts`** — the on/off preference toggles the *customer* owns (`MEMORY_FACTS`/`toggleMemoryFact` in the customer app). Customer-editable; staff can read but not change them.
+- **`agent_memory_records`** — staff-owned notes managed in the internal console. They are scoped to the signed-in staff account, are separate from customer memory, and are not injected into customer chat.
+- **`customer_memory`** — customer-owned facts, keyed by `customer_id` and `memory_key`, with per-fact enablement. Customer APIs scope access to the authenticated owner; staff support access is explicitly selected and audit logged.
+- **`customer_memory_access_logs`** — audit metadata for staff customer-memory views and mutations. The log records actor, customer, action, and optional fact ID, never fact values.
 
 Different owners → different RLS → different tables.
 

@@ -13,6 +13,14 @@ export type RequestPriority = "low" | "medium" | "high" | "urgent"
 
 export type ChatRole = "user" | "assistant"
 
+export interface CustomerMemoryFact {
+  id: string
+  key: string
+  label: string
+  value: string
+  enabled: boolean
+}
+
 export interface ChatMessage {
   type: "message"
   id: string

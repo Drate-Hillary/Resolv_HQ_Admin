@@ -3,6 +3,8 @@
 import Link from "next/link"
 import { useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { useRequestsStore } from "@/lib/stores/requests-store"
 import type { RequestPriority, Ticket } from "@/types"
 
@@ -21,6 +23,7 @@ const statusVariant: Record<string, "approve" | "default" | "secondary"> = {
 export function TicketTable() {
   const tickets = useRequestsStore((s) => s.tickets)
   const isLoading = useRequestsStore((s) => s.isLoading)
+  const error = useRequestsStore((s) => s.error)
   const fetchTickets = useRequestsStore((s) => s.fetchTickets)
 
   useEffect(() => {
@@ -29,11 +32,37 @@ export function TicketTable() {
   }, [])
 
   if (isLoading && tickets.length === 0) {
-    return <p className="px-1 text-xs text-muted-foreground">Loading tickets…</p>
+    return (
+      <div className="flex flex-col gap-2" aria-busy="true" aria-label="Loading tickets">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="h-11 w-full rounded-md" />
+        ))}
+      </div>
+    )
+  }
+
+  if (error && tickets.length === 0) {
+    return (
+      <div
+        role="alert"
+        className="flex flex-col items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-6 py-10 text-center"
+      >
+        <p className="text-sm font-medium text-foreground">We couldn&apos;t load your tickets</p>
+        <p className="max-w-sm text-xs text-muted-foreground">{error}</p>
+        <Button size="sm" variant="outline" onClick={() => void fetchTickets()}>
+          Try again
+        </Button>
+      </div>
+    )
   }
 
   if (tickets.length === 0) {
-    return <p className="px-1 text-xs text-muted-foreground">No open tickets right now.</p>
+    return (
+      <div className="flex flex-col items-center gap-1 rounded-md border border-dashed border-border px-6 py-12 text-center">
+        <p className="text-sm font-medium text-foreground">No open tickets right now</p>
+        <p className="text-xs text-muted-foreground">New customer requests will appear here as they come in.</p>
+      </div>
+    )
   }
 
   return (

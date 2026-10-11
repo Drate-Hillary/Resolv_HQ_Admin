@@ -3,6 +3,7 @@
 import { cn } from "cn"
 import { useConsoleStore } from "@/lib/stores/console-store"
 import type { AgentStatus } from "@/types/console"
+import { AgentThinkingOrb } from "@/components/console/agent-thinking-orb"
 
 const statusMeta: Record<AgentStatus, { label: string; tone: "idle" | "active" | "warn" | "danger" }> = {
   ready: { label: "Ready", tone: "idle" },
@@ -33,12 +34,16 @@ export function AgentStatusPill() {
 
   return (
     <div className={cn("flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-medium", toneClass[meta.tone])}>
-      <span className="relative flex size-1.5">
-        {pulsing && (
-          <span className={cn("motion-safe:absolute motion-safe:inline-flex motion-safe:size-full motion-safe:animate-ping motion-safe:rounded-full motion-safe:opacity-75", dotClass[meta.tone])} />
-        )}
-        <span className={cn("relative inline-flex size-1.5 rounded-full", dotClass[meta.tone])} />
-      </span>
+      {status === "thinking" ? (
+        <AgentThinkingOrb />
+      ) : (
+        <span className="relative flex size-1.5">
+          {pulsing && (
+            <span className={cn("motion-safe:absolute motion-safe:inline-flex motion-safe:size-full motion-safe:animate-ping motion-safe:rounded-full motion-safe:opacity-75", dotClass[meta.tone])} />
+          )}
+          <span className={cn("relative inline-flex size-1.5 rounded-full", dotClass[meta.tone])} />
+        </span>
+      )}
       {meta.label}
     </div>
   )

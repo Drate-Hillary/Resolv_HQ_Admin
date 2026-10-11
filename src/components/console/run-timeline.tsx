@@ -26,6 +26,7 @@ export function RunTimeline() {
       {run.map((step, i) => {
         const isLast = i === run.length - 1
         const clickable = step.status !== "pending"
+        const isHandoff = step.label.startsWith("Handoff:")
         return (
           <li key={step.key} className="flex gap-3">
             <div className="flex flex-col items-center">
@@ -41,14 +42,25 @@ export function RunTimeline() {
                 selectedStepKey === step.key && "bg-muted"
               )}
             >
-              <p
-                className={cn(
-                  "text-xs font-medium",
-                  step.status === "pending" ? "text-muted-foreground" : "text-foreground"
+              <div className="flex flex-wrap items-center gap-1.5">
+                <p
+                  className={cn(
+                    "text-xs font-medium",
+                    step.status === "pending"
+                      ? "text-muted-foreground"
+                      : isHandoff
+                        ? "text-primary"
+                        : "text-foreground"
+                  )}
+                >
+                  {step.label}
+                </p>
+                {isHandoff && (
+                  <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold tracking-wide text-primary">
+                    Hand Off
+                  </span>
                 )}
-              >
-                {step.label}
-              </p>
+              </div>
               {step.status !== "pending" && stepPreview(step) && (
                 <p className="mt-0.5 line-clamp-1 text-sm text-muted-foreground">
                   {stepPreview(step)}
@@ -65,31 +77,31 @@ export function RunTimeline() {
 function StepBadge({ status }: { status: RunStep["status"] }) {
   if (status === "done") {
     return (
-      <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+      <span className="flex items-center justify-center rounded-full size-5 shrink-0 bg-primary text-primary-foreground">
         <Icon icon={Tick02Icon} size={16} strokeWidth={2.5} />
       </span>
     )
   }
   if (status === "active") {
     return (
-      <span className="flex size-5 shrink-0 items-center justify-center rounded-full border border-primary bg-primary/15">
+      <span className="flex items-center justify-center border rounded-full size-5 shrink-0 border-primary bg-primary/15">
         <span className="size-1.5 rounded-full bg-primary motion-safe:animate-pulse" />
       </span>
     )
   }
   if (status === "blocked") {
     return (
-      <span className="flex size-5 shrink-0 items-center justify-center rounded-full border border-primary bg-primary/15 text-primary">
+      <span className="flex items-center justify-center border rounded-full size-5 shrink-0 border-primary bg-primary/15 text-primary">
         <Icon icon={Alert02Icon} size={16} strokeWidth={2.5} />
       </span>
     )
   }
   if (status === "failed") {
     return (
-      <span className="flex size-5 shrink-0 items-center justify-center rounded-full border border-destructive bg-destructive/15 text-destructive">
+      <span className="flex items-center justify-center border rounded-full size-5 shrink-0 border-destructive bg-destructive/15 text-destructive">
         <Icon icon={Cancel01Icon} size={16} strokeWidth={2.5} />
       </span>
     )
   }
-  return <span className="size-5 shrink-0 rounded-full border border-border bg-secondary" />
+  return <span className="border rounded-full size-5 shrink-0 border-border bg-secondary" />
 }

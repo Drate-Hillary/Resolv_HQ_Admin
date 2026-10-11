@@ -3,6 +3,7 @@
 import { cn } from "cn"
 import { useConsoleStore } from "@/lib/stores/console-store"
 import type { AgentStatus } from "@/types/console"
+import { AgentThinkingOrb } from "@/components/console/agent-thinking-orb"
 
 const statusLabel: Record<AgentStatus, string> = {
   ready: "Ready",
@@ -33,7 +34,11 @@ export function RecentTasks() {
         <li key={t.id} className="px-4 py-3">
           <p className="line-clamp-2 text-xs/relaxed text-foreground">{t.request}</p>
           <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span className={cn("size-1.5 rounded-full", statusDot[t.status])} />
+            {t.status === "thinking" ? (
+              <AgentThinkingOrb />
+            ) : (
+              <span className={cn("size-1.5 rounded-full", statusDot[t.status])} />
+            )}
             {statusLabel[t.status]}
             <span aria-hidden>·</span>
             {new Date(t.startedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}

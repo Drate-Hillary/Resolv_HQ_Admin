@@ -1,5 +1,7 @@
 import { create } from "zustand"
+import { toast } from "sonner"
 import { apiClient } from "@/backend/api/client"
+import { getErrorMessage, toastError } from "@/lib/errors"
 import { createClient as createBrowserSupabaseClient } from "@/backend/supabase/client"
 import { onRealtimeEvent, retainRealtime } from "@/lib/realtime"
 import type { Ticket, TicketDetail, TicketMessage } from "@/types"
@@ -60,7 +62,9 @@ export const useRequestsStore = create<RequestsState>((set, get) => ({
       const { data } = await apiClient.get<Ticket[]>("/requests")
       set({ tickets: data, isLoading: false })
     } catch (err) {
-      set({ isLoading: false, error: err instanceof Error ? err.message : "Failed to load tickets" })
+      const message = getErrorMessage(err, "Failed to load tickets")
+      set({ isLoading: false, error: message })
+      toast.error(message, { id: "requests-load" })
     }
   },
 
@@ -70,7 +74,7 @@ export const useRequestsStore = create<RequestsState>((set, get) => ({
       const { data } = await apiClient.get<TicketDetail>(`/requests/${id}`)
       set((s) => ({ detailById: { ...s.detailById, [id]: data } }))
     } catch (err) {
-      set({ error: err instanceof Error ? err.message : "Failed to load ticket" })
+      set({ error: toastError(err, "Failed to load ticket", "request-detail") })
     }
   },
 
@@ -85,7 +89,7 @@ export const useRequestsStore = create<RequestsState>((set, get) => ({
         tickets: s.tickets.map((t) => (t.id === id ? { ...t, status: data.status } : t)),
       }))
     } catch (err) {
-      set({ isSubmitting: false, error: err instanceof Error ? err.message : "Failed to update status" })
+      set({ isSubmitting: false, error: toastError(err, "Failed to update status") })
     }
   },
 
@@ -102,7 +106,7 @@ export const useRequestsStore = create<RequestsState>((set, get) => ({
         ),
       }))
     } catch (err) {
-      set({ isSubmitting: false, error: err instanceof Error ? err.message : "Failed to assign" })
+      set({ isSubmitting: false, error: toastError(err, "Failed to assign the ticket") })
     }
   },
 
@@ -117,7 +121,7 @@ export const useRequestsStore = create<RequestsState>((set, get) => ({
         tickets: s.tickets.map((t) => (t.id === id ? { ...t, closedAt: data.closedAt } : t)),
       }))
     } catch (err) {
-      set({ isSubmitting: false, error: err instanceof Error ? err.message : "Failed to close ticket" })
+      set({ isSubmitting: false, error: toastError(err, "Failed to close the ticket") })
     }
   },
 
@@ -135,7 +139,7 @@ export const useRequestsStore = create<RequestsState>((set, get) => ({
       })
       return true
     } catch (err) {
-      set({ error: err instanceof Error ? err.message : "Failed to send reply" })
+      set({ error: toastError(err, "Your reply could not be sent. It was kept so you can retry.") })
       return false
     }
   },

@@ -8,6 +8,7 @@ import { ApprovalCard } from "@/components/console/approval-card"
 import { useConsoleStore } from "@/lib/stores/console-store"
 import type { AgentStatus } from "@/types/console"
 import { BubbleChatIcon } from "@hugeicons/core-free-icons"
+import { AgentThinkingOrb } from "@/components/console/agent-thinking-orb"
 
 const processLabel: Record<AgentStatus, string> = {
   ready: "Idle — waiting for a task.",
@@ -45,7 +46,7 @@ export function ActivityBubble() {
         </div>
         {busy && (
           <div className="flex w-fit items-center gap-1.5 rounded-full border border-dashed border-primary/40 bg-primary/5 px-2.5 py-1 text-sm text-primary">
-            <span className="size-1.5 rounded-full bg-primary motion-safe:animate-pulse" />
+            <AgentThinkingOrb />
             Working&hellip;
           </div>
         )}

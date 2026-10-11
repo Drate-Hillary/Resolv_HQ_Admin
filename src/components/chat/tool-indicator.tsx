@@ -1,6 +1,7 @@
 import { motion } from "framer-motion"
 import { cn } from "cn"
 import type { ToolEvent } from "@/types"
+import { AgentThinkingOrb } from "@/components/console/agent-thinking-orb"
 
 export function ToolIndicator({ event }: { event: ToolEvent }) {
   const running = event.status === "running"
@@ -13,9 +14,11 @@ export function ToolIndicator({ event }: { event: ToolEvent }) {
       transition={{ duration: 0.2 }}
       className="ml-9 flex w-fit items-center gap-1.5 rounded-full border border-dashed border-signal/40 bg-signal/5 px-2.5 py-1 text-sm text-signal"
     >
-      <span
-        className={cn("size-1.5 rounded-full bg-signal", running && "motion-safe:animate-pulse")}
-      />
+      {running ? (
+        <AgentThinkingOrb />
+      ) : (
+        <span className={cn("size-1.5 rounded-full bg-signal")} />
+      )}
       {event.label}
       {running ? "…" : ""}
     </motion.div>

@@ -1,6 +1,6 @@
 # Task Tracker — Weeks 1–8, by Status and Priority
 
-**Compiled:** 24 Sept 2026 · **Last updated:** 3 Oct 2026 (Weeks 2–5 backfill pass) | **Consolidates:** [`week-1.md`](./week-1.md) – [`week-8.md`](./week-8.md)
+**Compiled:** 24 Sept 2026 · **Last updated:** 8 Oct 2026 (Week 6 memory integration) | **Consolidates:** [`week-1.md`](./week-1.md) – [`week-8.md`](./week-8.md)
 
 Every task the brief asks for across all 8 weeks, grouped by actual status, sorted **highest priority first** within each group. Priority reflects how much it blocks other work or graded rubric items — not the week it's nominally due in. Each entry explains what the task actually involves, why it sits at that priority, who's best placed to own it (per the brief's §5 role split), and the concrete evidence or gap behind the status.
 
@@ -64,6 +64,18 @@ Anything the agent drafts mid-loop (an escalation ticket) routes to the same `ag
 
 **Week 5 progress report** *(Week 5 · Owner: PRL)* — **Done 2 Oct**
 [`../week-5-progress-report.md`](../week-5-progress-report.md) — objectives vs. achievements, decisions, risks, and the Week 6 plan. Honest about the partial trace set.
+
+**Customer memory discovery, context, and console integration** *(Week 6 · Owner: AEL/QSL)* — **Code and documentation implemented 8 Oct**
+Customer memory is loaded server-side into authenticated customer chat context. The console discovers aggregate memory metadata and registered tools from backend registries, provides separate staff-owned memory CRUD, and supports access to a specifically selected customer's facts and master preference. Staff customer-memory views and changes are audited without copying values into the audit log. The new backend migration must be applied before the new console endpoints are available in a deployed database. See [`../memory-design-and-data-handling-note.md`](../memory-design-and-data-handling-note.md).
+
+**Memory Design and Data Handling Note** *(Week 6 · Owner: QSL)* — **Done 8 Oct**
+[`../memory-design-and-data-handling-note.md`](../memory-design-and-data-handling-note.md) documents customer and console memory flows, account-scoped access, staff audit logging, retention/deletion limits, and remaining production work.
+
+**Internal console memory integration** *(Week 6 · Owner: AEL/QSL)* — **Implemented 8 Oct**
+Staff-owned memory is separate from customer chat context; customer memory is accessed only after explicit selection, and staff views/changes are audit logged. Apply the backend migration before deploying the integration.
+
+**MCP server and interface specification** *(Week 6 · Owner: AIL)* — **Implemented 8 Oct**
+[`../mcp-style-interface-spec.md`](../mcp-style-interface-spec.md) documents authenticated Streamable HTTP at `/mcp` and a stdio process, input/normalized output contracts for all four tools, caller/role scope, activation, error behavior, and setup. Both transports share the existing tool logic; no customer ID is accepted as tool input, tool-registry failures are closed, and stdio re-verifies its startup token per tool call.
 
 **Real-time messaging and live notifications (unplanned, outside the 8-week brief)** *(Owner: AIL)* — **Done 2 Oct**
 Requested because ticket messages took too long to arrive. Server-Sent Events stream (`resolv-hq-backend/src/routes/events.ts`, `lib/realtime.ts`; Redis pub/sub with local fallback) pushes new messages, typing signals and notifications instantly; `POST /requests/:id/typing` added; message send no longer waits on notification work or a second fetch. Console: animated three-dot typing indicator, instant optimistic send, live bell with per-type labels and filters (All / Unread / Support / Request update / AI / Completed / System). Type-check and lint clean on both apps; recipient targeting verified with a hub test. **Not yet verified:** end-to-end in a browser with two users. **Not covered:** the `resolv-hq-customer` mobile app does not yet consume `/events`.
@@ -131,9 +143,6 @@ The brief wants the boundary matrix drafted early, as a scoping decision, not di
 **3 execution traces incl. one failure/recovery case** *(Week 5 · Owner: AEL)* — **brief minimum met 3 Oct; only optional extras remain**
 The brief wants traces of the *real* agent loop, including a genuine failure and its recovery. `evaluation-table.md` has scenario-level results that gesture at this (e.g., a tool timeout that retried and succeeded), but those are traces of the scripted mock pipeline, not `react-agent.ts` running against a live model. **Updated 2 Oct — 2 of 3 captured** in [`../../evidence/traces/week-5-execution-traces.md`](../../evidence/traces/week-5-execution-traces.md): T1 live-model success (no tool called) and T2 a real failure/recovery (both providers failed → keyword fallback; provider-level, not tool-level). **Updated 3 Oct — now 6 captured:** T3 live Plan→Act→Observe with two tools, T4 a tool-level miss → two re-plans → safe decline, T5/T6 live customer-vs-staff parity on a refund-pressure prompt (both only drafted; nothing claimed done). Gemini's quota had reset; Anthropic is still out of credit. **Still not captured:** a run that hits `MAX_ITERATIONS`, and boundary Layer 2 tripping on a live model (the model refused correctly, so it had nothing to catch).
 
-**Persistent memory wired into the agent's context** *(Week 6 · Owner: AEL)*
-This is the one item on the whole tracker that's still a genuine, non-trivial code task rather than documentation or evidence-capture. `customer_memory_facts` exists as a table, but `system-prompt-spec.md` says plainly it "isn't in the assistant's context yet." **What's left:** extend whatever loads a caller's context in `chat.ts`/`ai.ts` to also pull their approved memory facts into the prompt, following the same "informative, never authorizing" rule the spec already lays out for when this gets added.
-
 **Corpus/Source Register** *(Week 3 · Owner: AEL)*
 **Updated 3 Oct — written, but it shows the gap.** [`../corpus-source-register.md`](../corpus-source-register.md) lists every published document with source type, date and passage count. The live corpus is **3 documents (1 substantive, 1 all-zero ticket report, 1 off-domain KFC menu) — below the brief's 10–50.** **Update 3 Oct:** 8 synthetic support articles are drafted in [`../corpus/`](../corpus/) (not uploaded). **What's left (admin action):** upload them, unpublish the KFC and empty Ticket Summary documents (→ 9 documents, one short of 10), and update the register.
 
@@ -173,17 +182,11 @@ Not found in-repo. **What's left:** these can be derived retroactively from feat
 **Week 1 progress report** *(Week 1 · Owner: PRL)*
 Not found — the earliest report on file is Week 2's. **What's left:** write it using the brief's §8 template, noting plainly that it was compiled retrospectively in Week 4 for evidence purposes, with the real completion date stated rather than silently backdated.
 
-**Memory Design and Data Handling Note** *(Week 6 · Owner: QSL)*
-Blocked on the memory-wiring code task above landing first. **What's left, once that's done:** document what's stored (approved preference facts), why, who can access it (RLS-scoped to the owning customer), retention, and deletion.
-
 **Demonstration of memory affecting a real answer** *(Week 6 · Owner: AEL)*
-Same blocker. **What's left:** one captured trace showing a remembered fact visibly changing a drafted response, while the approval gate still applies — memory should inform, never silently authorize.
+**Done 9 Oct (one pair of live runs):** [`../../evidence/traces/week-6-memory-traces.md`](../../evidence/traces/week-6-memory-traces.md). **What's left:** repeat through the full chat route so the pending `agent_approvals` row is also captured, once a second provider works.
 
-**MCP-style interface specification** *(Week 6 · Owner: AIL)*
-Not written, but mostly a documentation task: the four tools already have clean input/output schemas in `function-calling-schemas.md`. **What's left:** restate them as capability/input/output/permissions/security-boundary entries — satisfies the brief's "OR document an MCP-style interface" option without building an actual external MCP server.
-
-**Week 6 progress report** *(Week 6 · Owner: PRL)*
-Future week; not yet due.
+**Week 6 progress report** *(Week 6 · Owner: PRL)* — **Drafted 9 Oct**
+[`../week-6-progress-report.md`](../week-6-progress-report.md) and [`../state-model.md`](../state-model.md). Commit links, ClickUp links and the individual-contributions table still need to be filled in by the lead.
 
 **Repository/evidence trail fix** *(Week 8 · Owner: DDL)*
 The outer `RESOLV_HQ` workspace has no commits, and the three sub-repos are staged as gitlinks with no `.gitmodules` — not functioning submodules. Since GitHub history is primary grading evidence, a grader trying to clone the project as presented would hit this immediately. **What's left:** either wire real submodules so a recursive clone works, or drop the wrapper-repo idea and document the 3-repo layout explicitly in a top-level README with links to each.
@@ -227,7 +230,7 @@ No automated test files exist in any repo. Same reasoning — a handful of manua
 2. **First thing in Week 6 (P0, the one remaining blocker):** the key is registered but no provider has capacity (Anthropic out of credit, Gemini free tier exhausted). Fund one, confirm a live `/chat` call, then re-run the two missing Week 5 traces. Everything downstream — RAG grounding, evaluation, traces — still depends on it.
 3. **Backfill Week 1 (P1):** Project Charter and 8–12 user stories — derive the stories from already-built features rather than inventing new ones. (The architecture diagram is now done — see item below.)
 4. **Close the remaining documentation debt (P1):** the AI Boundary Matrix still needs its Week 1 planning-table framing. ~~Write the Agent Task Contract and extend the diagram.~~ **Done 2 Oct.** ~~Rewrite the prompt spec and evaluation table, label the Tool Catalogue, capture the failure/auth test evidence.~~ **Done 25 Sept** as part of the Week 4 close-out.
-5. **Wire memory into the agent's context (P1):** this is the one remaining piece of *code* work standing between the project and a fully-covered brief — everything else left is documentation, evaluation volume, or evidence capture.
+5. ~~**Wire customer memory into authenticated chat and integrate the console memory page**~~ **Implemented 8 Oct.** Remaining memory evidence: capture a real trace showing a remembered fact affecting a drafted answer while the approval gate remains in force.
 6. **Scale evaluation and compile the Failure Catalogue (P2):** grow the 10-case table to 30+ against the real domain and live model, and pull the "Known limitation" notes already scattered across five implementation docs (now six, including the Week 4 test-evidence doc) into one catalogue with re-tests.
 7. **Deliberately skip the P3 items unless time is left over:** CI pipeline and an automated E2E suite are good practice but aren't graded — a few manual smoke tests are enough.
 8. **Week 8, last:** fix the git/submodule evidence trail before tagging anything, then assemble the final report and evidence pack — by this point it should be almost entirely pointers into documents that already exist from steps 1–6.

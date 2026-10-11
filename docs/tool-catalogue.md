@@ -1,5 +1,7 @@
 # Tool Catalogue — RESOLV-HQ Agent Tools
 
+For the machine-readable interface mapping, normalized output contracts, role scopes, and MCP transport setup, see [`mcp-style-interface-spec.md`](./mcp-style-interface-spec.md). The backend now exposes these tools over authenticated Streamable HTTP and stdio MCP transports.
+
 **Closes:** Week 4's *"Tool Catalogue and tool/API schemas"* deliverable ([brief §7](./capstone-project-brief.md#week-4-21--25-sept-2026-tools-and-function-calling)) | **Source of truth:** `resolv-hq-backend/src/lib/agent-tools.ts` | **Date:** 25 Sept 2026
 
 The narrative behind these tools — what existed before, what changed, why the brief's original tool names don't map 1:1 onto this domain's data model — is in [`function-calling-schemas.md`](./function-calling-schemas.md). This document is the catalogue itself, in the form the brief expects: one entry per tool with its purpose, exact schema, authorization model, and failure behaviour.

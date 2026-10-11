@@ -28,7 +28,7 @@ The agent can call only these four. Anything else the model names returns `Unkno
 - The conversation: system prompt (`SYSTEM_PROMPT_VERSION = "v1.1"`), the caller's message, and the loop's own assistant/tool messages for this turn.
 - Pre-loaded, **caller-scoped** context built before the loop starts: published `knowledge_documents` passages, the caller's own `requests`, and the caller's own account row. All are resolved from the authenticated `req.user.id`, never from a client-supplied identifier.
 - No tool accepts a customer/account selector argument, so no tool call can reach another caller's data (executed proof: [`tool-failure-auth-test-evidence.md`](./tool-failure-auth-test-evidence.md), Case 2).
-- **Not in state (yet):** persistent memory. `customer_memory_facts` is not read by the agent; that is a Week 6 item.
+- **Persistent memory (Week 6):** for customer callers only, the backend also loads that customer's enabled `customer_memory` facts, and only if their `memory_enabled` master switch is on. They are bounded by `CUSTOMER_MEMORY_CONTEXT_BUDGET_CHARS`, placed in the prompt as untrusted context, and never authorize an action or bypass the approval gate. Staff callers get none. See [`state-model.md`](./state-model.md).
 - State lives only for the turn; the loop keeps no hidden memory between turns.
 
 ## 4. Limits

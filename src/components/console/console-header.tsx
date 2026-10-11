@@ -20,6 +20,7 @@ const pageLabels: Record<string, string> = {
   "/knowledge": "Knowledge Base",
   "/tools": "Tools",
   "/traces": "Traces & Logs",
+  "/memory": "Memory & MCP",
 }
 
 export function ConsoleHeader() {

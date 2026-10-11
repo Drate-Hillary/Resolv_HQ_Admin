@@ -1,6 +1,7 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import { apiClient } from "@/backend/api/client"
+import { toastError } from "@/lib/errors"
 import type { AgentStatus, RecentTask, RunStep } from "@/types/console"
 
 interface WorkspaceMessage {
@@ -138,7 +139,7 @@ export const useConsoleStore = create<ConsoleState>()(
       set((s) => ({
         status: "failed",
         recentTasks: setTaskStatus(s.recentTasks, taskId, "failed"),
-        error: err instanceof Error ? err.message : "The agent failed to respond",
+        error: toastError(err, "The agent failed to respond"),
         messages: [
           ...s.messages,
           {
@@ -168,7 +169,7 @@ export const useConsoleStore = create<ConsoleState>()(
         ],
       }))
     } catch (err) {
-      set({ error: err instanceof Error ? err.message : "Failed to approve" })
+      set({ error: toastError(err, "Failed to approve") })
     }
   },
 
@@ -189,7 +190,7 @@ export const useConsoleStore = create<ConsoleState>()(
         ],
       }))
     } catch (err) {
-      set({ error: err instanceof Error ? err.message : "Failed to reject" })
+      set({ error: toastError(err, "Failed to reject") })
     }
   },
 

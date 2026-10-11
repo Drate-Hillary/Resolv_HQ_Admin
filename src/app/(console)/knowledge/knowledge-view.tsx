@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
+import { getErrorMessage } from "@/lib/errors"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Icon } from "@/components/ui/icon"
@@ -77,9 +78,7 @@ const statusVariant: Record<KnowledgeDocumentRow["status"], "approve" | "default
 const UNCATEGORIZED = "uncategorized"
 const ALL_CATEGORIES = "all"
 
-function errorMessage(err: unknown, fallback: string) {
-  return (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? fallback
-}
+const errorMessage = getErrorMessage
 
 export function KnowledgeView({
   initialDocuments,

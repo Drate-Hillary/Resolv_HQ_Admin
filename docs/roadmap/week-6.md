@@ -1,6 +1,6 @@
 # Week 6 — Memory, State and Interoperability
 
-**Brief dates:** 5–9 Oct 2026 | **Status today (24 Sept):** the schema exists; the actual memory behaviour doesn't yet.
+**Brief dates:** 5–9 Oct 2026 | **Status updated 8 Oct 2026:** customer chat memory and internal console memory management are backend-integrated; the four agent tools are exposed over authenticated Streamable HTTP and stdio MCP transports. A real-answer memory trace remains.
 
 ## What the brief asks for
 
@@ -14,23 +14,31 @@
 | Deliverable | Status | Evidence / gap |
 |---|---|---|
 | Session/workflow state | ✅ | Modeled in Supabase — `ai_conversations`/`ai_messages`, `agent_runs`/`agent_steps`, `requests`/`request_status_history` (per `docs/database-schema.md`). |
-| Persistent memory mechanism | ⚠️ | `customer_memory_facts` and `agent_memory_records` exist as tables, but `resolv-hq-backend/docs/system-prompt-spec.md` states plainly: *"`customer_memory` exists... but isn't in the assistant's context yet."* The schema is there; the agent doesn't actually read it. This is this week's headline task. |
-| Memory Design & Data Handling Note | ❌ | Not written yet. |
-| Demonstrated effect on a real task | ❌ | Can't be demonstrated until the wiring above lands. |
-| MCP-style interface spec | ❌ | Not written. The four tools in `agent-tools.ts` already have clean input/output schemas (`function-calling-schemas.md`) — documenting them as an MCP-style interface is a writing task, not a build task. |
+| Customer memory persistence and context | ✅ | Customer app facts are server-backed, customer-scoped, individually enabled, and loaded by the authenticated chat route into model context when the customer's master preference is enabled. See [`../memory-design-and-data-handling-note.md`](../memory-design-and-data-handling-note.md). |
+| Memory Design & Data Handling Note | ✅ | [`../memory-design-and-data-handling-note.md`](../memory-design-and-data-handling-note.md) documents customer and console data flows, access limits, audit behavior, retention/deletion behavior, guardrails, and remaining production policies. |
+| Internal console memory integration | ✅ | Staff can manage their own separate memory and, after explicitly selecting a customer, view/manage that customer's facts and master preference. Staff customer-memory access and mutations are audit logged without recording fact values. Apply the backend migration before deploying this integration. |
+| Demonstrated effect on a real task | ✅ | [`../../evidence/traces/week-6-memory-traces.md`](../../evidence/traces/week-6-memory-traces.md): live memory-off and memory-on runs. One pair; approval row not written because the chat route was bypassed. |
+| MCP server and interface | ✅ | [`../mcp-style-interface-spec.md`](../mcp-style-interface-spec.md) describes the implemented `/mcp` Streamable HTTP endpoint and stdio process, all four tools' input/output contracts, identity and role scopes, and error behavior. Both transports share handlers and fail closed on tool-registry errors. |
 
 ## Action plan
 
-1. **Wire `customer_memory_facts` into the assistant's context.** Small, contained change: extend whatever loads `knowledge_documents`/`requests` for a caller in `chat.ts`/`ai.ts` to also load that caller's approved memory facts, and add them to the system prompt context per `system-prompt-spec.md` §4's rule 4 (memory is informative, never authorizing an action on its own).
-2. **Write the Memory Design and Data Handling Note**: what's stored (customer-approved preference facts — e.g. preferred contact channel, standing notes), why (personalizes routing/answers without re-asking), who can access it (RLS-scoped to the owning customer; staff never see another customer's), retention (kept until the customer removes it via Profile > Saved Information), deletion (customer-initiated, immediate).
+1. ✅ **Customer memory is wired into customer chat.** The backend loads only the authenticated customer's enabled records when their persisted master preference is on; the prompt treats them as untrusted, non-authorizing context. The internal console now uses authenticated backend endpoints for staff-owned and explicitly selected customer memory.
+2. ✅ **Write the Memory Design and Data Handling Note.** Completed in [`../memory-design-and-data-handling-note.md`](../memory-design-and-data-handling-note.md), including the difference between current behavior and the intended production controls.
 3. **Demonstrate it changing a real answer** — capture one trace where a remembered fact (e.g., a preferred contact channel) visibly affects a drafted escalation, without letting memory alone authorize the escalation (the approval gate still applies).
-4. **Write the MCP-style interface spec** for the existing tool registry: for each of the four tools, capability, input schema, output schema, permission/authorization model (per-caller scoping already enforced in code), and security boundary (read-only, no cross-customer access, no state mutation). This satisfies the brief's "OR document an MCP-style interface" option without standing up an actual external MCP server.
+4. ✅ **Implement and document MCP transports** for the existing tool registry in [`../mcp-style-interface-spec.md`](../mcp-style-interface-spec.md). Streamable HTTP at `/mcp` and stdio use authenticated identities, shared read-only handlers, and the same tool schemas. The spec records that staff request visibility is broader than customer visibility and that draft approval persistence is a separate host action, not part of the MCP draft tool.
 5. Week 6 progress report.
 
 ## Deliverables checklist
 
-- [ ] `customer_memory_facts` actually read by the assistant
-- [ ] Memory Design and Data Handling Note
-- [ ] Trace demonstrating memory affecting a real answer
-- [ ] MCP-style interface specification for the tool registry
-- [ ] Week 6 progress report
+- [x] Backend customer-scoped memory table and read/update/delete API
+- [x] Load enabled customer memory into authenticated customer model context
+- [x] Persist customer master and per-fact memory controls
+- [x] Browser-local console prototype and editable memory UI
+- [x] Memory Design and Data Handling Note
+- [x] Connect internal console UI to staff/customer memory APIs
+- [x] Trace demonstrating memory affecting a real answer
+- [x] MCP-style interface specification for the tool registry
+- [x] Week 6 progress report ([`../week-6-progress-report.md`](../week-6-progress-report.md))
+- [x] State model ([`../state-model.md`](../state-model.md))
+- [x] Customer create route (`POST /memory-facts`) and memory/MCP automated tests
+- [x] Mobile screen for adding a memory fact

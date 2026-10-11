@@ -1,6 +1,7 @@
 import { ChatHeader } from "@/components/chat/chat-header"
-import { ChatWindow } from "@/components/chat/chat-window"
 import { ChatInput } from "@/components/chat/chat-input"
+import { ChatWindow } from "@/components/chat/chat-window"
+import { MemorySettings } from "@/components/chat/memory-settings"
 
 export default function ChatPage() {
   return (
@@ -13,7 +14,10 @@ export default function ChatPage() {
     >
       <ChatHeader />
       <main className="flex-1">
-        <ChatWindow />
+        <div className="mx-auto flex max-w-160 flex-col gap-6 px-4 py-6">
+          <MemorySettings />
+          <ChatWindow />
+        </div>
       </main>
       <ChatInput />
     </div>
