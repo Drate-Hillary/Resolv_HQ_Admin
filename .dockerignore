@@ -1,5 +1,5 @@
 node_modules
-.next
+dist
 .git
 .env
 .env.local
@@ -8,4 +8,3 @@ npm-debug.log
 Dockerfile
 .dockerignore
 docker-compose.yml
-nginx

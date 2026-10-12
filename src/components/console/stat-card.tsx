@@ -14,7 +14,7 @@ export function StatCard({
   tone?: "default" | "warn" | "danger"
 }) {
   return (
-    <div className="glass-panel flex flex-col gap-3 p-4 transition-colors hover:bg-black/[0.03]">
+    <div className="glass-panel flex flex-col gap-3 p-4 transition-colors hover:bg-black/3">
       <div className="flex items-center justify-between gap-2">
         <p className="truncate text-xs font-medium text-muted-foreground">{label}</p>
         <span

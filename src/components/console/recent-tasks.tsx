@@ -1,5 +1,3 @@
-"use client"
-
 import { cn } from "cn"
 import { useConsoleStore } from "@/lib/stores/console-store"
 import type { AgentStatus } from "@/types/console"

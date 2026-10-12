@@ -1,7 +1,4 @@
-"use client"
-
-import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { Link, useNavigate } from "react-router-dom"
 import {
   Avatar,
   AvatarFallback,
@@ -46,15 +43,14 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
-  const router = useRouter()
+  const navigate = useNavigate()
   // Polling itself is started by the header's bell; this just reads the shared count.
   const unreadCount = useNotificationsStore((s) => s.unreadCount)
 
   async function handleLogout() {
     const supabase = createClient()
     await supabase.auth.signOut()
-    router.replace("/auth/login")
-    router.refresh()
+    navigate("/auth/login", { replace: true })
   }
 
   return (
@@ -102,7 +98,7 @@ export function NavUser({
                 <HugeiconsIcon icon={CheckmarkBadgeIcon} strokeWidth={2} />
                 Account
               </DropdownMenuItem>
-              <DropdownMenuItem render={<Link href="/admin" />}>
+              <DropdownMenuItem render={<Link to="/admin" />}>
                 <HugeiconsIcon icon={NotificationIcon} strokeWidth={2} />
                 Notifications
                 {unreadCount > 0 && (

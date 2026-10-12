@@ -1,5 +1,3 @@
-"use client"
-
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "cn"
 import { useAdminStore } from "@/lib/stores/admin-store"

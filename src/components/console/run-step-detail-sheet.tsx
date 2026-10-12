@@ -1,9 +1,9 @@
-"use client"
-
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Icon } from "@/components/ui/icon"
+import { ProviderFailures } from "@/components/console/provider-failures"
+import { isProviderFailureMessage } from "@/lib/provider-errors"
 import { useConsoleStore } from "@/lib/stores/console-store"
 import { CheckmarkCircle02Icon, Cancel01Icon } from "@hugeicons/core-free-icons"
 
@@ -28,7 +28,12 @@ export function RunStepDetailSheet() {
             </SheetHeader>
 
             <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 pb-6 text-sm">
-              {step.detail?.type === "text" && <p className="text-foreground/90">{step.detail.text}</p>}
+              {step.detail?.type === "text" &&
+                (isProviderFailureMessage(step.detail.text) ? (
+                  <ProviderFailures message={step.detail.text} />
+                ) : (
+                  <p className="text-foreground/90">{step.detail.text}</p>
+                ))}
 
               {step.detail?.type === "approval" && (
                 <>

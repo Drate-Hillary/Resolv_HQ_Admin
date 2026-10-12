@@ -1,7 +1,7 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import { ResponsiveContainer, Sankey } from "recharts"
+import { ProviderFailures } from "@/components/console/provider-failures"
+import { isProviderFailureMessage } from "@/lib/provider-errors"
 import { apiClient } from "@/backend/api/client"
 
 type Step = "sense" | "plan" | "act" | "observe" | "guard" | "respond"
@@ -151,7 +151,7 @@ export function ProviderSankey() {
           ))}
           {[...new Set(flow.nodes.flatMap((n) => (n.step ? [n.step] : [])))].map((st) => (
             <li key={st} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <span className="size-2.5 rotate-45 rounded-[2px]" style={{ backgroundColor: STEP_STYLE[st].color }} />
+              <span className="size-2.5 rotate-45 rounded-xs" style={{ backgroundColor: STEP_STYLE[st].color }} />
               {STEP_STYLE[st].label}
             </li>
           ))}
@@ -245,7 +245,12 @@ export function ProviderSankey() {
                     Failover: {h.from} {h.reason}, so {h.to} took over.
                   </p>
                 ))}
-                {t.failureReason && <p className="text-xs text-destructive">{t.failureReason}</p>}
+                {t.failureReason &&
+                  (isProviderFailureMessage(t.failureReason) ? (
+                    <ProviderFailures message={t.failureReason} />
+                  ) : (
+                    <p className="text-xs text-destructive">{t.failureReason}</p>
+                  ))}
                 <ol className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
                   {t.steps.map((st, k) => (
                     <li key={k} className="flex items-center gap-1">
