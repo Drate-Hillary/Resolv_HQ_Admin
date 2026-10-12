@@ -1,11 +1,11 @@
-"use client"
-
 import { useState } from "react"
 import { toast } from "sonner"
 import { toastError } from "@/lib/errors"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { apiClient } from "@/backend/api/client"
+import { ProviderFailureCard } from "@/components/console/provider-failures"
+import { describeProviderError } from "@/lib/provider-errors"
 import type { AgentProviderRow } from "./providers-view"
 
 interface EvalCaseResult {
@@ -78,13 +78,13 @@ export function EvaluationTab({ providers }: { providers: AgentProviderRow[] }) 
                       avg {(result.avg_latency_ms / 1000).toFixed(1)}s · {new Date(result.ran_at).toLocaleTimeString()}
                     </span>
                   </div>
+                  {[...new Set(result.cases.flatMap((c) => (c.error ? [c.error] : [])))].map((raw) => (
+                    <ProviderFailureCard key={raw} failure={describeProviderError(provider.name, raw)} />
+                  ))}
                   <ul className="flex flex-col divide-y divide-border text-xs">
                     {result.cases.map((c) => (
                       <li key={c.id} className="flex items-center justify-between gap-2 py-1.5">
-                        <span className="text-foreground">
-                          {c.label}
-                          {c.error && <span className="block text-destructive">{c.error}</span>}
-                        </span>
+                        <span className="text-foreground">{c.label}</span>
                         <span className="flex shrink-0 items-center gap-2">
                           <span className="text-muted-foreground">{(c.latency_ms / 1000).toFixed(1)}s</span>
                           <Badge variant={c.passed ? "approve" : "destructive"}>{c.passed ? "Pass" : "Fail"}</Badge>

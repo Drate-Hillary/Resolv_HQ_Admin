@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import { toast } from "sonner"
 import { toastError } from "@/lib/errors"
@@ -38,7 +36,7 @@ export interface AgentProviderRow {
 }
 
 const PROVIDER_OPTIONS = [
-  { value: "openai", label: "OpenAI" },
+  { value: "openai", label: "GPT" },
   { value: "anthropic", label: "Anthropic" },
   { value: "google", label: "Google" },
   { value: "custom", label: "Custom endpoint" },

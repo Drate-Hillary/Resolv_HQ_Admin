@@ -1,8 +1,11 @@
-import { apiFetch } from "@/backend/api/server"
+import { PageStatus } from "@/components/console/page-status"
+import { useApiData } from "@/hooks/use-api-data"
 import { TracesView, type AgentRunRow } from "./traces-view"
 
-export default async function TracesPage() {
-  const runs = await apiFetch<AgentRunRow[]>("/admin/traces")
+export default function TracesPage() {
+  const { data, loading, error } = useApiData<AgentRunRow[]>("/admin/traces")
 
-  return <TracesView runs={runs} />
+  if (!data) return <PageStatus loading={loading} error={error} />
+
+  return <TracesView runs={data} />
 }

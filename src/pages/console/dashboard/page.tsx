@@ -1,8 +1,9 @@
-import Link from "next/link"
+import { Link } from "react-router-dom"
 import { RunsChart, type RunsByDay } from "@/components/console/runs-chart"
 import { AgentPerformanceChart, type AgentPerformance } from "@/components/console/agent-performance-chart"
 import { StatCard } from "@/components/console/stat-card"
-import { apiFetch } from "@/backend/api/server"
+import { PageStatus } from "@/components/console/page-status"
+import { useApiData } from "@/hooks/use-api-data"
 import {
   Pulse02Icon,
   CheckmarkCircle02Icon,
@@ -49,8 +50,12 @@ interface DashboardResponse {
   }
 }
 
-export default async function DashboardPage() {
-  const { runsByDay, recentRuns, stats, agentPerformance } = await apiFetch<DashboardResponse>("/admin/dashboard")
+export default function DashboardPage() {
+  const { data, loading, error } = useApiData<DashboardResponse>("/admin/dashboard")
+
+  if (!data) return <PageStatus loading={loading} error={error} />
+
+  const { runsByDay, recentRuns, stats, agentPerformance } = data
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 lg:px-6">
@@ -94,7 +99,7 @@ export default async function DashboardPage() {
       <div className="glass-panel p-5">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium text-foreground">Recent runs</h3>
-          <Link href="/traces" className="text-xs font-medium text-primary hover:underline">
+          <Link to="/traces" className="text-xs font-medium text-primary hover:underline">
             View all traces
           </Link>
         </div>

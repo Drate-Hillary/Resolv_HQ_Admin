@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect } from "react"
 import { AdminHeader } from "@/components/admin/admin-header"
 import { TicketList } from "@/components/admin/ticket-list"

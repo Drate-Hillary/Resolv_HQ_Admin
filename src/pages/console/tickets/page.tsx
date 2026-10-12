@@ -1,5 +1,3 @@
-"use client"
-
 import { TicketTable } from "@/components/tickets/ticket-table"
 
 export default function TicketsPage() {

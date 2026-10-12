@@ -1,6 +1,6 @@
-"use client"
-
 import { Badge } from "@/components/ui/badge"
+import { ProviderFailures } from "@/components/console/provider-failures"
+import { isProviderFailureMessage } from "@/lib/provider-errors"
 
 export interface AgentRunRow {
   id: string
@@ -27,6 +27,17 @@ const statusVariant: Record<string, "approve" | "default" | "destructive"> = {
   failed: "destructive",
 }
 
+// Fixed locale + timezone so server and client render identical text (avoids hydration mismatch).
+const startedAtFormatter = new Intl.DateTimeFormat("en-US", {
+  dateStyle: "medium",
+  timeStyle: "medium",
+  timeZone: "UTC",
+})
+
+function formatStartedAt(iso: string) {
+  return `${startedAtFormatter.format(new Date(iso))} UTC`
+}
+
 export function TracesView({ runs }: { runs: AgentRunRow[] }) {
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-6 lg:px-6">
@@ -47,7 +58,7 @@ export function TracesView({ runs }: { runs: AgentRunRow[] }) {
               <div className="min-w-0">
                 <p className="truncate text-xs font-medium text-foreground">{run.current_step ?? "—"}</p>
                 <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                  <span>{new Date(run.started_at).toLocaleString()}</span>
+                  <span>{formatStartedAt(run.started_at)}</span>
                   <span>·</span>
                   <span>{run.model ?? "—"}</span>
                   <span>·</span>
@@ -66,7 +77,14 @@ export function TracesView({ runs }: { runs: AgentRunRow[] }) {
                     Tool: <span className="text-foreground">{run.tool_name}</span>
                   </p>
                 )}
-                {run.error_message && <p className="mt-1 text-destructive">{run.error_message}</p>}
+                {run.error_message &&
+                  (isProviderFailureMessage(run.error_message) ? (
+                    <div className="mt-2">
+                      <ProviderFailures message={run.error_message} />
+                    </div>
+                  ) : (
+                    <p className="mt-1 text-destructive">{run.error_message}</p>
+                  ))}
               </div>
             )}
           </div>

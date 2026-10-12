@@ -1,8 +1,11 @@
-import { apiFetch } from "@/backend/api/server"
+import { PageStatus } from "@/components/console/page-status"
+import { useApiData } from "@/hooks/use-api-data"
 import { ProvidersView, type AgentProviderRow } from "./providers-view"
 
-export default async function ProvidersPage() {
-  const providers = await apiFetch<AgentProviderRow[]>("/admin/agent-providers")
+export default function ProvidersPage() {
+  const { data, loading, error } = useApiData<AgentProviderRow[]>("/admin/agent-providers")
 
-  return <ProvidersView initialProviders={providers} />
+  if (!data) return <PageStatus loading={loading} error={error} />
+
+  return <ProvidersView initialProviders={data} />
 }

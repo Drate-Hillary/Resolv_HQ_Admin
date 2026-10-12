@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import { apiClient } from "@/backend/api/client"
 import { Badge } from "@/components/ui/badge"

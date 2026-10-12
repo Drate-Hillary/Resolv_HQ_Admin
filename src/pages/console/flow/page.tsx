@@ -1,7 +1,5 @@
-"use client"
-
 import { useEffect, useMemo } from "react"
-import Link from "next/link"
+import { Link } from "react-router-dom"
 import { AgentFlowDiagram } from "@/components/console/agent-flow-diagram"
 import { ProviderSankey } from "@/components/console/provider-sankey"
 import { Icon } from "@/components/ui/icon"
@@ -39,7 +37,7 @@ export default function AgentFlowPage() {
           {flow.handoffs.length === 0 && flow.path.length === 0 ? (
             <p className="mt-3 text-xs text-muted-foreground">
               No run yet.{" "}
-              <Link href="/agent" className="text-foreground underline underline-offset-2">
+              <Link to="/agent" className="text-foreground underline underline-offset-2">
                 Start one in Agent Workspace
               </Link>{" "}
               and its path will show here.

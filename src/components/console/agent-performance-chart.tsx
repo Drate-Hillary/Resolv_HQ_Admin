@@ -1,5 +1,3 @@
-"use client"
-
 import { Cell, Pie, PieChart } from "recharts"
 import {
   ChartContainer,

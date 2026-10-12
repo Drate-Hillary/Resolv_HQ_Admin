@@ -12,7 +12,7 @@ Both diagrams are Mermaid, so they render on GitHub and in most Markdown viewers
 ```mermaid
 flowchart TB
     subgraph Client["Client surfaces"]
-        Console["resolv-hq (Next.js console)\n/chat · /admin · /agent · /dashboard"]
+        Console["resolv-hq (React console)\n/chat · /admin · /agent · /dashboard"]
         Mobile["resolv-hq-customer (Expo app)"]
     end
 

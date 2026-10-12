@@ -1,7 +1,5 @@
-"use client"
-
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { Link } from "react-router-dom"
+import { useLocation } from "react-router-dom"
 import {
   Collapsible,
   CollapsibleContent,
@@ -37,7 +35,7 @@ export function NavMain({
     }[]
   }[]
 }) {
-  const pathname = usePathname()
+  const { pathname } = useLocation()
 
   return (
     <SidebarGroup>
@@ -52,7 +50,7 @@ export function NavMain({
             <SidebarMenuButton
               tooltip={item.title}
               isActive={pathname === item.url}
-              render={<Link href={item.url} />}
+              render={<Link to={item.url} />}
             >
               {item.icon}
               <span>{item.title}</span>

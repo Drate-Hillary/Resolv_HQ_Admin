@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { apiFetch } from "@/backend/api/server"
+import { PageStatus } from "@/components/console/page-status"
+import { useApiData } from "@/hooks/use-api-data"
 import { MemoryAccessPanel } from "./memory-access-panel"
 
 interface MemorySummary {
@@ -28,11 +29,21 @@ function displayKey(key: string) {
   return key.replace(/[_-]+/g, " ")
 }
 
-export default async function MemoryMcpPage() {
-  const [memory, tools] = await Promise.all([
-    apiFetch<MemorySummary>("/admin/memory"),
-    apiFetch<AgentTool[]>("/admin/tools"),
-  ])
+export default function MemoryMcpPage() {
+  const memoryQuery = useApiData<MemorySummary>("/admin/memory")
+  const toolsQuery = useApiData<AgentTool[]>("/admin/tools")
+  const memory = memoryQuery.data
+  const tools = toolsQuery.data
+
+  if (!memory || !tools) {
+    return (
+      <PageStatus
+        loading={memoryQuery.loading || toolsQuery.loading}
+        error={memoryQuery.error ?? toolsQuery.error}
+      />
+    )
+  }
+
   const activeToolCount = tools.filter((tool) => tool.is_active).length
   const executableToolCount = tools.filter((tool) => tool.executable && tool.is_active).length
 

@@ -1,11 +1,19 @@
-import { apiFetch } from "@/backend/api/server"
+import { PageStatus } from "@/components/console/page-status"
+import { useApiData } from "@/hooks/use-api-data"
 import { KnowledgeView, type KnowledgeCategoryRow, type KnowledgeDocumentRow } from "./knowledge-view"
 
-export default async function KnowledgeBasePage() {
-  const [documents, categories] = await Promise.all([
-    apiFetch<KnowledgeDocumentRow[]>("/admin/knowledge"),
-    apiFetch<KnowledgeCategoryRow[]>("/admin/knowledge-categories"),
-  ])
+export default function KnowledgeBasePage() {
+  const documents = useApiData<KnowledgeDocumentRow[]>("/admin/knowledge")
+  const categories = useApiData<KnowledgeCategoryRow[]>("/admin/knowledge-categories")
 
-  return <KnowledgeView initialDocuments={documents} initialCategories={categories} />
+  if (!documents.data || !categories.data) {
+    return (
+      <PageStatus
+        loading={documents.loading || categories.loading}
+        error={documents.error ?? categories.error}
+      />
+    )
+  }
+
+  return <KnowledgeView initialDocuments={documents.data} initialCategories={categories.data} />
 }

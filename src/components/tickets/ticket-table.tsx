@@ -1,6 +1,4 @@
-"use client"
-
-import Link from "next/link"
+import { Link } from "react-router-dom"
 import { useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -94,12 +92,12 @@ function TicketRow({ ticket }: { ticket: Ticket }) {
   return (
     <tr className="transition-colors hover:bg-accent/30">
       <td className="px-3 py-2.5 align-top">
-        <Link href={`/tickets/${ticket.id}`} className="font-medium text-primary hover:underline">
+        <Link to={`/tickets/${ticket.id}`} className="font-medium text-primary hover:underline">
           #{ticket.ticketNumber}
         </Link>
       </td>
       <td className="max-w-64 truncate px-3 py-2.5 align-top text-foreground">
-        <Link href={`/tickets/${ticket.id}`} className="hover:underline">
+        <Link to={`/tickets/${ticket.id}`} className="hover:underline">
           {ticket.title}
         </Link>
       </td>

@@ -1,8 +1,11 @@
-import { apiFetch } from "@/backend/api/server"
+import { PageStatus } from "@/components/console/page-status"
+import { useApiData } from "@/hooks/use-api-data"
 import { McpTester, type RegistryTool } from "./mcp-tester"
 
-export default async function McpTesterPage() {
-  const registry = await apiFetch<RegistryTool[]>("/admin/tools")
+export default function McpTesterPage() {
+  const { data: registry, loading, error } = useApiData<RegistryTool[]>("/admin/tools")
+
+  if (!registry) return <PageStatus loading={loading} error={error} />
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6">
