@@ -1,7 +1,5 @@
-"use client"
-
 import * as React from "react"
-import Link from "next/link"
+import { Link } from "react-router-dom"
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
@@ -57,7 +55,7 @@ export function AppSidebar({
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" render={<Link href="/dashboard" />}>
+            <SidebarMenuButton size="lg" render={<Link to="/dashboard" />}>
               <div className="flex items-center justify-center rounded-full aspect-square size-8 bg-sidebar-primary text-sidebar-primary-foreground">
                 <HugeiconsIcon icon={SparklesIcon} strokeWidth={2} />
               </div>

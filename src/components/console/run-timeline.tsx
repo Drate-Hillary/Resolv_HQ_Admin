@@ -1,5 +1,3 @@
-"use client"
-
 import { Icon } from "@/components/ui/icon"
 import { cn } from "cn"
 import { useConsoleStore } from "@/lib/stores/console-store"

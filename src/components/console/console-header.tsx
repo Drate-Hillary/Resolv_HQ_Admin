@@ -1,6 +1,4 @@
-"use client"
-
-import { usePathname } from "next/navigation"
+import { useLocation } from "react-router-dom"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -24,7 +22,7 @@ const pageLabels: Record<string, string> = {
 }
 
 export function ConsoleHeader() {
-  const pathname = usePathname()
+  const { pathname } = useLocation()
   const label = pageLabels[pathname] ?? "Resolv-HQ"
 
   return (

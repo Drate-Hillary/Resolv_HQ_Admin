@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import { ThinkingOrb, type OrbState } from "thinking-orbs"
 

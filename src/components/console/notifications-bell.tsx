@@ -1,7 +1,5 @@
-"use client"
-
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Icon } from "@/components/ui/icon"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -49,7 +47,7 @@ function destination(n: AppNotification): string | null {
 }
 
 export function NotificationsBell() {
-  const router = useRouter()
+  const navigate = useNavigate()
   const items = useNotificationsStore((s) => s.items)
   const unreadCount = useNotificationsStore((s) => s.unreadCount)
   const markRead = useNotificationsStore((s) => s.markRead)
@@ -67,7 +65,7 @@ export function NotificationsBell() {
   function open(n: AppNotification) {
     if (!n.read) void markRead(n.id)
     const href = destination(n)
-    if (href) router.push(href)
+    if (href) navigate(href)
   }
 
   return (

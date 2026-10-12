@@ -1,12 +1,12 @@
 # RESOLV-HQ
 
-A Next.js console for a bounded, read-only-tool customer/staff support-request triage assistant — the ReAct-style agent pipeline (model → RAG → tools → agent loop → memory → evaluation → observability → guardrails) built out as a real, navigable UI so every Week 2 deliverable has a working surface to point at, not just a document.
+A React (Vite) console for a bounded, read-only-tool customer/staff support-request triage assistant — the ReAct-style agent pipeline (model → RAG → tools → agent loop → memory → evaluation → observability → guardrails) built out as a real, navigable UI so every Week 2 deliverable has a working surface to point at, not just a document.
 
 The worked domain is a support-request triage assistant: it can answer questions from an approved knowledge base, look up the caller's own account/request status, and draft an escalation ticket — but it can never issue a refund, change billing or account details, cancel a service, or take any other state-changing action on its own. Those actions always stop for a human (see [Guardrails](#guardrails--boundary-matrix)).
 
 ## Tech stack
 
-- **Framework**: Next.js 16 (App Router), React 19, TypeScript
+- **Framework**: React 19, Vite, React Router, TypeScript
 - **Styling**: Tailwind CSS v4, `shadcn`/Base UI components
 - **State**: Zustand (`src/lib/stores`)
 - **HTTP**: Axios client (`src/lib/api/client.ts`) — scaffolded with a bearer-token interceptor; live endpoints are stubbed and commented pending backend availability
@@ -56,5 +56,5 @@ No backend exists yet — everything above runs on in-memory mock data. `supabas
 
 ## Learn more
 
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Learn Next.js](https://nextjs.org/learn)
+- [Vite Documentation](https://vite.dev/guide/)
+- [React Router Documentation](https://reactrouter.com)

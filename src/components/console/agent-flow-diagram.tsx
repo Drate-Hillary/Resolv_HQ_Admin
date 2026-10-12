@@ -1,5 +1,3 @@
-"use client"
-
 import { Icon } from "@/components/ui/icon"
 import { cn } from "cn"
 import { FLOW_NODES, type DerivedFlow, type FlowNodeId } from "@/lib/agent-flow"
