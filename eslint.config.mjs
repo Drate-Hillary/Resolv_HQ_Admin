@@ -5,7 +5,7 @@ import reactHooks from "eslint-plugin-react-hooks";
 import globals from "globals";
 
 export default defineConfig([
-  globalIgnores(["dist/**", "node_modules/**", "scripts/**"]),
+  globalIgnores(["dist/**", "node_modules/**", "scripts/**", ".claude/**"]),
   js.configs.recommended,
   ...tseslint.configs.recommended,
   reactHooks.configs.flat.recommended,

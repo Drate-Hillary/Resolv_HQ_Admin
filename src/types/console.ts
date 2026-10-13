@@ -33,4 +33,6 @@ export interface RunStep {
   label: string
   status: RunStepStatus
   detail?: RunStepDetail
+  /** Real measurements for the step, shown under its label. */
+  meta?: { latencyMs?: number; tokens?: string }
 }

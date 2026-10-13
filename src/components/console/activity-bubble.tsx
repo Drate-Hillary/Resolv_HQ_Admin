@@ -6,11 +6,11 @@ import { ApprovalCard } from "@/components/console/approval-card"
 import { useConsoleStore } from "@/lib/stores/console-store"
 import type { AgentStatus } from "@/types/console"
 import { BubbleChatIcon } from "@hugeicons/core-free-icons"
-import { AgentThinkingOrb } from "@/components/console/agent-thinking-orb"
+import { AgentWorkingIndicator } from "@/components/console/agent-working-indicator"
 
 const processLabel: Record<AgentStatus, string> = {
   ready: "Idle — waiting for a task.",
-  thinking: "Working on your request…",
+  thinking: "Running the ReAct loop…",
   awaiting_approval: "Paused — waiting for your approval.",
   completed: "Finished the task.",
   failed: "The run failed.",
@@ -42,12 +42,7 @@ export function ActivityBubble() {
           {lastStep && !busy && <p className="mt-1 text-muted-foreground">Last step: {lastStep.label}</p>}
           {error && <p className="mt-1 text-destructive">{error}</p>}
         </div>
-        {busy && (
-          <div className="flex w-fit items-center gap-1.5 rounded-full border border-dashed border-primary/40 bg-primary/5 px-2.5 py-1 text-sm text-primary">
-            <AgentThinkingOrb />
-            Working&hellip;
-          </div>
-        )}
+        {busy && <AgentWorkingIndicator />}
         <RunTimeline />
         <ApprovalCard />
       </PopoverContent>
