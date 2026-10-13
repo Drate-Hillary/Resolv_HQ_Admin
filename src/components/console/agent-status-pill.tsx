@@ -31,7 +31,7 @@ export function AgentStatusPill() {
   const pulsing = meta.tone === "active" || meta.tone === "warn"
 
   return (
-    <div className={cn("flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-medium", toneClass[meta.tone])}>
+    <div className={cn("flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium", toneClass[meta.tone])}>
       {status === "thinking" ? (
         <AgentThinkingOrb />
       ) : (

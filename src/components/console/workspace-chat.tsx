@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "cn"
 import { useConsoleStore } from "@/lib/stores/console-store"
-import { AgentThinkingOrb } from "@/components/console/agent-thinking-orb"
+import { AgentWorkingIndicator } from "@/components/console/agent-working-indicator"
 
 const busyStatuses = ["thinking"]
 
@@ -43,12 +43,7 @@ export function WorkspaceChat() {
             {m.content}
           </div>
         ))}
-        {busy && (
-          <div className="flex w-fit items-center gap-1.5 rounded-full border border-dashed border-primary/40 bg-primary/5 px-2.5 py-1 text-sm text-primary">
-            <AgentThinkingOrb />
-            Working&hellip;
-          </div>
-        )}
+        {busy && <AgentWorkingIndicator />}
       </div>
       <div className="shrink-0 border-t border-border p-3">
         <div className="flex items-end gap-2">

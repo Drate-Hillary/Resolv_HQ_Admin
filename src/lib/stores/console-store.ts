@@ -2,6 +2,7 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import { apiClient } from "@/backend/api/client"
 import { toastError } from "@/lib/errors"
+import { timelineToSteps, type TimelineRow } from "@/lib/run-timeline"
 import type { AgentStatus, RecentTask, RunStep } from "@/types/console"
 
 interface WorkspaceMessage {
@@ -23,6 +24,9 @@ interface EscalationPayload {
 interface ChatMessageResponse {
   assistantMessage: { content: string }
   steps: string[]
+  timeline?: TimelineRow[]
+  handoffs?: string[]
+  tokens?: { input: number; output: number }
   escalation: EscalationPayload | null
 }
 
@@ -36,6 +40,10 @@ interface ConsoleState {
   conversationId: string | null
   approvalId: string | null
   error: string | null
+  /** When the current run started (ms epoch), for the live elapsed timer. */
+  runStartedAt: number | null
+  /** Real tokens reported by the provider across this conversation so far. */
+  sessionTokens: number
   runAgent: (request: string) => Promise<void>
   selectStep: (key: string | null) => void
   approve: () => Promise<void>
@@ -70,6 +78,8 @@ export const useConsoleStore = create<ConsoleState>()(
   conversationId: null,
   approvalId: null,
   error: null,
+  runStartedAt: null,
+  sessionTokens: 0,
 
   selectStep: (key) => set({ selectedStepKey: key }),
 
@@ -85,6 +95,7 @@ export const useConsoleStore = create<ConsoleState>()(
     set({
       run: [],
       status: "thinking",
+      runStartedAt: Date.now(),
       selectedStepKey: null,
       approvalId: null,
       error: null,
@@ -103,11 +114,14 @@ export const useConsoleStore = create<ConsoleState>()(
         content: request,
       })
 
-      const steps: RunStep[] = data.steps.map((text) => ({
-        key: `step-${uid()}`,
-        label: text,
-        status: "done",
-      }))
+      // Prefer the backend trace (real order, latency, tokens); a turn that never
+      // reached the model (e.g. the clarification gate) has none, so fall back to
+      // the plain step list.
+      const steps: RunStep[] =
+        data.timeline && data.timeline.length > 0
+          ? timelineToSteps(data.timeline, data.handoffs)
+          : data.steps.map((text) => ({ key: `step-${uid()}`, label: text, status: "done" as const }))
+      const turnTokens = (data.tokens?.input ?? 0) + (data.tokens?.output ?? 0)
 
       if (data.escalation) {
         steps.push({
@@ -119,6 +133,8 @@ export const useConsoleStore = create<ConsoleState>()(
         set((s) => ({
           run: steps,
           status: "awaiting_approval",
+          runStartedAt: null,
+          sessionTokens: s.sessionTokens + turnTokens,
           approvalId: data.escalation!.approvalId,
           recentTasks: setTaskStatus(s.recentTasks, taskId, "awaiting_approval"),
         }))
@@ -129,7 +145,7 @@ export const useConsoleStore = create<ConsoleState>()(
           status: "done",
           detail: { type: "text", text: data.assistantMessage.content },
         })
-        set((s) => ({ run: steps, status: "completed", recentTasks: setTaskStatus(s.recentTasks, taskId, "completed") }))
+        set((s) => ({ run: steps, status: "completed", runStartedAt: null, sessionTokens: s.sessionTokens + turnTokens, recentTasks: setTaskStatus(s.recentTasks, taskId, "completed") }))
       }
 
       set((s) => ({
@@ -138,6 +154,7 @@ export const useConsoleStore = create<ConsoleState>()(
     } catch (err) {
       set((s) => ({
         status: "failed",
+        runStartedAt: null,
         recentTasks: setTaskStatus(s.recentTasks, taskId, "failed"),
         error: toastError(err, "The agent failed to respond"),
         messages: [
@@ -205,6 +222,8 @@ export const useConsoleStore = create<ConsoleState>()(
       approvalId: null,
       currentTaskId: null,
       error: null,
+      runStartedAt: null,
+      sessionTokens: 0,
     })
   },
 }),
@@ -218,6 +237,7 @@ export const useConsoleStore = create<ConsoleState>()(
         conversationId: s.conversationId,
         currentTaskId: s.currentTaskId,
         approvalId: s.approvalId,
+        sessionTokens: s.sessionTokens,
         status: s.status === "thinking" ? "failed" : s.status,
       }),
       // A task that was mid-flight when the page closed can never finish.

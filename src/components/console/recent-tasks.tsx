@@ -5,7 +5,7 @@ import { AgentThinkingOrb } from "@/components/console/agent-thinking-orb"
 
 const statusLabel: Record<AgentStatus, string> = {
   ready: "Ready",
-  thinking: "Working",
+  thinking: "Running",
   awaiting_approval: "Needs approval",
   completed: "Completed",
   failed: "Failed",
