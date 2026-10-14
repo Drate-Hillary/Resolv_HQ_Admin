@@ -1,4 +1,6 @@
+import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
+import { RunTraceDetail } from "@/components/console/run-trace-detail"
 import { ProviderFailures } from "@/components/console/provider-failures"
 import { isProviderFailureMessage } from "@/lib/provider-errors"
 
@@ -39,12 +41,13 @@ function formatStartedAt(iso: string) {
 }
 
 export function TracesView({ runs }: { runs: AgentRunRow[] }) {
+  const [openRunId, setOpenRunId] = useState<string | null>(null)
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-6 lg:px-6">
       <div>
         <h2 className="text-lg font-semibold tracking-tight text-foreground">Traces &amp; logs</h2>
         <p className="mt-1 text-xs text-muted-foreground">
-          Exactly what happened on each run — model, current step, tool call and outcome.
+          Exactly what happened on each run — open one to see retrieval, every model and tool call with latency and tokens, and the outcome.
         </p>
       </div>
 
@@ -69,6 +72,19 @@ export function TracesView({ runs }: { runs: AgentRunRow[] }) {
               </div>
               <Badge variant={statusVariant[run.status] ?? "default"}>{run.status.replace("_", " ")}</Badge>
             </div>
+
+            <button
+              onClick={() => setOpenRunId(openRunId === run.id ? null : run.id)}
+              className="mt-3 text-xs font-medium text-primary hover:underline"
+              aria-expanded={openRunId === run.id}
+            >
+              {openRunId === run.id ? "Hide step trace" : "Show step trace"}
+            </button>
+            {openRunId === run.id && (
+              <div className="mt-2 border-t border-border pt-2">
+                <RunTraceDetail runId={run.id} />
+              </div>
+            )}
 
             {(run.tool_name || run.error_message) && (
               <div className="mt-3 border-t border-border pt-3 text-xs">

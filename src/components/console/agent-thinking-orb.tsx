@@ -13,7 +13,8 @@ const orbStates: OrbState[] = [
   "shaping",
 ]
 
-export function AgentThinkingOrb({ size = 20 }: { size?: 20 | 64 }) {
+/** Cycles through the orb states, or shows `state` when the caller knows what the agent is doing. */
+export function AgentThinkingOrb({ size = 20, state: fixedState }: { size?: 20 | 64; state?: OrbState }) {
   const [stateIndex, setStateIndex] = useState(0)
 
   useEffect(() => {
@@ -34,7 +35,7 @@ export function AgentThinkingOrb({ size = 20 }: { size?: 20 | 64 }) {
     }
   }, [])
 
-  const state = orbStates[stateIndex]
+  const state = fixedState ?? orbStates[stateIndex]
 
   return <ThinkingOrb state={state} size={size} aria-label={`Agent ${state}…`} />
 }

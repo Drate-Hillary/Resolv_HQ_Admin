@@ -1,6 +1,7 @@
 import { Icon } from "@/components/ui/icon"
 import { cn } from "cn"
 import { useConsoleStore } from "@/lib/stores/console-store"
+import { formatDuration } from "@/lib/run-timeline"
 import type { RunStep } from "@/types/console"
 import { Tick02Icon, Alert02Icon, Cancel01Icon } from "@hugeicons/core-free-icons"
 
@@ -59,6 +60,11 @@ export function RunTimeline() {
                   </span>
                 )}
               </div>
+              {(step.meta?.latencyMs != null || step.meta?.tokens) && (
+                <p className="mt-0.5 text-[10px] text-muted-foreground tabular-nums">
+                  {[step.meta.latencyMs != null ? formatDuration(step.meta.latencyMs) : null, step.meta.tokens].filter(Boolean).join(" · ")}
+                </p>
+              )}
               {step.status !== "pending" && stepPreview(step) && (
                 <p className="mt-0.5 line-clamp-1 text-sm text-muted-foreground">
                   {stepPreview(step)}
