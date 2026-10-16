@@ -27,7 +27,7 @@ import {
   Activity03Icon,
   CpuIcon,
   Ticket01Icon,
-  WorkflowSquare01Icon,
+  Calendar03Icon,
   SparklesIcon,
   AiBrain01Icon,
   PlugSocketIcon,
@@ -41,7 +41,7 @@ const consolePages = [
   { title: "Knowledge Base", url: "/knowledge", icon: <HugeiconsIcon icon={Knowledge01Icon} strokeWidth={2} /> },
   { title: "Tools", url: "/tools", icon: <HugeiconsIcon icon={Wrench01Icon} strokeWidth={2} /> },
   { title: "AI Models", url: "/providers", icon: <HugeiconsIcon icon={CpuIcon} strokeWidth={2} /> },
-  { title: "Agent Flow", url: "/flow", icon: <HugeiconsIcon icon={WorkflowSquare01Icon} strokeWidth={2} /> },
+  { title: "Scheduler", url: "/scheduler", icon: <HugeiconsIcon icon={Calendar03Icon} strokeWidth={2} /> },
   { title: "Traces & Logs", url: "/traces", icon: <HugeiconsIcon icon={Activity03Icon} strokeWidth={2} /> },
   { title: "Memory & MCP", url: "/memory", icon: <HugeiconsIcon icon={AiBrain01Icon} strokeWidth={2} /> },
   { title: "MCP Tester", url: "/mcp", icon: <HugeiconsIcon icon={PlugSocketIcon} strokeWidth={2} /> },
@@ -52,6 +52,12 @@ function ConsolePages() {
   const { pathname } = useLocation()
   const onConsolePage = consolePages.some((p) => pathname === p.url || pathname.startsWith(`${p.url}/`))
   const [open, setOpen] = React.useState(onConsolePage)
+  const { state, isMobile } = useSidebar()
+
+  // Icon rail: no group label to click, so list every page as an icon with a tooltip.
+  if (state === "collapsed" && !isMobile) {
+    return <NavMain items={consolePages} />
+  }
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -95,7 +101,7 @@ export function AppSidebar({
   }
 
   return (
-    <Sidebar {...props}>
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>

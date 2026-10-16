@@ -7,6 +7,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3001
 export type RealtimeEvent =
   | { type: "notification"; notification: AppNotification }
   | { type: "message"; requestId: string; message: TicketMessage }
+  | { type: "scheduler"; topic: string; event: unknown }
   | { type: "typing"; requestId: string; userId: string; senderType: "customer" | "admin" | "agent"; typing: boolean }
 
 type Listener = (event: RealtimeEvent) => void

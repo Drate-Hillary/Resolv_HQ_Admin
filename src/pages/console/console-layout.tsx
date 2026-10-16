@@ -6,6 +6,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { createClient } from "@/backend/supabase/client"
 import { apiClient } from "@/backend/api/client"
 import { useConsoleStore } from "@/lib/stores/console-store"
+import { useSchedulerEngine } from "@/hooks/use-scheduler-engine"
 
 interface MeResponse {
   name: string
@@ -13,6 +14,7 @@ interface MeResponse {
 }
 
 export default function ConsoleLayout() {
+  useSchedulerEngine()
   const [user, setUser] = useState({ name: "Staff", email: "", avatar: "" })
 
   // Task history is persisted in localStorage and shown in the sidebar on every page;
@@ -52,7 +54,7 @@ export default function ConsoleLayout() {
   }, [])
 
   return (
-    <SidebarProvider className="h-svh overflow-hidden">
+    <SidebarProvider defaultOpen={false} className="h-svh overflow-hidden">
       <AppSidebar user={user} />
       <SidebarInset className="min-w-0">
         <ConsoleHeader />
