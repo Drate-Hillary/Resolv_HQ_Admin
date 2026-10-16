@@ -15,6 +15,8 @@ interface ChatState {
   updateMemoryFactValue: (id: string, value: string) => void
   getMemoryContext: () => string
   sendMessage: (content: string) => Promise<void>
+  /** Start a fresh conversation; the next message opens a new backend conversation. */
+  newChat: () => void
 }
 
 let nextId = 100
@@ -129,6 +131,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
       ...lines,
       "The approval gate remains in effect for any real action or escalation.",
     ].join("\n")
+  },
+
+  newChat: () => {
+    if (get().isLoading) return
+    set({ conversationId: null, stream: [] })
   },
 
   sendMessage: async (content) => {

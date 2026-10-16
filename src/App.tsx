@@ -42,8 +42,8 @@ export default function App() {
           </Route>
         </Route>
 
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<Navigate to="/agent" replace />} />
+        <Route path="*" element={<Navigate to="/agent" replace />} />
       </Routes>
       <Toaster />
     </>
