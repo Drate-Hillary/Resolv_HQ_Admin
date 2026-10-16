@@ -15,7 +15,7 @@ import { NotificationsBell } from "@/components/console/notifications-bell"
 const pageLabels: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/agent": "Chat",
-  "/flow": "Agent Flow",
+  "/scheduler": "Scheduler",
   "/tickets": "Tickets",
   "/providers": "AI Models",
   "/mcp": "MCP Tester",

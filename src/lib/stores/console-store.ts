@@ -49,6 +49,10 @@ interface ConsoleState {
   approve: () => Promise<void>
   reject: () => Promise<void>
   newTask: () => void
+  /** Remove a task from Recent tasks; clears the workspace too if it is the open one. */
+  deleteTask: (id: string) => void
+  /** Put an earlier conversation back in the workspace so it can be continued. False if the agent is busy. */
+  loadConversation: (c: { taskId: string | null; conversationId: string | null; messages: WorkspaceMessage[]; run: RunStep[] }) => boolean
 }
 
 // Ids must stay unique across reloads now that history is persisted.
@@ -225,6 +229,30 @@ export const useConsoleStore = create<ConsoleState>()(
       runStartedAt: null,
       sessionTokens: 0,
     })
+  },
+
+  deleteTask: (id) => {
+    const s = get()
+    if (s.currentTaskId === id && s.status === "thinking") return
+    set({ recentTasks: s.recentTasks.filter((t) => t.id !== id) })
+    if (s.currentTaskId === id) get().newTask()
+  },
+
+  loadConversation: ({ taskId, conversationId, messages, run }) => {
+    const { status } = get()
+    if (status === "thinking" || status === "awaiting_approval") return false
+    set({
+      status: "completed",
+      run,
+      messages,
+      conversationId,
+      currentTaskId: taskId,
+      approvalId: null,
+      selectedStepKey: null,
+      error: null,
+      runStartedAt: null,
+    })
+    return true
   },
 }),
     {

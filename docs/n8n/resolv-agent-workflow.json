@@ -1,0 +1,358 @@
+{
+  "name": "Resolv-HQ agent task (scheduled, bounded, human-approved)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "resolv-task",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "n1-intake-webhook",
+      "name": "Task intake",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "resolv-task"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Intake: validate the request and resolve when it should run.\nconst body = $input.first().json.body ?? {};\nconst request = String(body.request ?? '').trim();\nif (!request) throw new Error('request is required');\nif (request.length > 2000) throw new Error('request is longer than 2000 characters');\nconst runAt = body.runAt ? new Date(body.runAt) : new Date();\nif (Number.isNaN(runAt.getTime())) throw new Error('runAt is not a valid date');\nreturn [{ json: { request, runAt: runAt.toISOString(), stage: 'intake' } }];"
+      },
+      "id": "n2-validate",
+      "name": "Validate request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resume": "specificTime",
+        "dateTime": "={{ $json.runAt }}"
+      },
+      "id": "n3-wait-until",
+      "name": "Wait until scheduled time",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        300
+      ],
+      "webhookId": "resolv-wait-until"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.RESOLV_API_URL }}/chat/conversations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}",
+        "options": {}
+      },
+      "id": "n4-conversation",
+      "name": "Open conversation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.RESOLV_API_URL }}/chat/conversations/{{ $json.id }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: $('Validate request').item.json.request }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "n5-agent",
+      "name": "Planner, tools and guard (backend agent)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        300
+      ],
+      "notes": "One call runs the backend ReAct loop: planner decides, tool executor runs search_knowledge_base / account_status_lookup / draft_escalation_ticket, boundary guard checks the draft. Returns assistantMessage, steps, timeline, escalation."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.escalation }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "n6-needs-approval",
+      "name": "Escalation drafted?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ { status: 'completed', answer: $json.assistantMessage.content, steps: $json.steps, tokens: $json.tokens } }}",
+        "options": {}
+      },
+      "id": "n7-respond-answer",
+      "name": "Record result: answered",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1340,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ { status: 'awaiting_approval', approvalId: $json.escalation.approvalId, ticket: $json.escalation, resumeUrl: $execution.resumeUrl } }}",
+        "options": {}
+      },
+      "id": "n8-respond-pending",
+      "name": "Record result: awaiting approval",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1340,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "httpMethod": "POST",
+        "options": {}
+      },
+      "id": "n9-wait-approval",
+      "name": "Human approval gate",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1560,
+        160
+      ],
+      "webhookId": "resolv-approval",
+      "notes": "Execution pauses here, with no cost, until staff POST {\"decision\":\"approve\"|\"reject\"} to the resumeUrl returned above."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c2",
+              "leftValue": "={{ $json.body.decision }}",
+              "rightValue": "approve",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "n10-decision",
+      "name": "Approved?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1780,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.RESOLV_API_URL }}/admin/approvals/{{ $('Escalation drafted?').item.json.escalation.approvalId }}/approve",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "n11-approve",
+      "name": "File escalation ticket",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2000,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.RESOLV_API_URL }}/admin/approvals/{{ $('Escalation drafted?').item.json.escalation.approvalId }}/reject",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "n12-reject",
+      "name": "Discard escalation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2000,
+        260
+      ]
+    }
+  ],
+  "connections": {
+    "Task intake": {
+      "main": [
+        [
+          {
+            "node": "Validate request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate request": {
+      "main": [
+        [
+          {
+            "node": "Wait until scheduled time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait until scheduled time": {
+      "main": [
+        [
+          {
+            "node": "Open conversation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Open conversation": {
+      "main": [
+        [
+          {
+            "node": "Planner, tools and guard (backend agent)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Planner, tools and guard (backend agent)": {
+      "main": [
+        [
+          {
+            "node": "Escalation drafted?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Escalation drafted?": {
+      "main": [
+        [
+          {
+            "node": "Record result: awaiting approval",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record result: answered",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Human approval gate": {
+      "main": [
+        [
+          {
+            "node": "Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approved?": {
+      "main": [
+        [
+          {
+            "node": "File escalation ticket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Discard escalation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record result: awaiting approval": {
+      "main": [
+        [
+          {
+            "node": "Human approval gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
