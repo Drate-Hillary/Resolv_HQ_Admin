@@ -42,7 +42,7 @@ export default function LoginPage() {
       return;
     }
 
-    const next = searchParams.get("next") ?? "/dashboard";
+    const next = searchParams.get("next") ?? "/agent";
     navigate(next, { replace: true });
   }
 

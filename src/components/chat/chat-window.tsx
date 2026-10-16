@@ -13,7 +13,7 @@ export function ChatWindow() {
   }, [stream.length])
 
   return (
-    <div className="mx-auto flex max-w-160 flex-col gap-3 px-4 py-6">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6">
       <AnimatePresence initial={false}>
         {stream.map((item) =>
           item.type === "message" ? (
