@@ -17,9 +17,9 @@
 | Scenario coverage (categories) | ✅ | The existing 10-case table already models the right categories: normal, edge (vague intent, unanswerable), incorrect-info, adversarial (prompt injection, system-prompt extraction), tool-unavailable, unauthorized-action, multi-issue. The shape is right — it just needs to grow from 10 to 30+ and run against the real domain/live model instead of the procurement mock. |
 | Guardrails | ✅ | Genuinely strong already: two-layer boundary matrix (`ai-boundary-matrix.md`), deterministic clarification gate (`clarification-prompting-logic.md`), strict tool schemas (`function-calling-schemas.md`), Redis-backed rate limiting (`model-abstraction-and-rate-limiting.md`), per-caller data scoping, and the human approval gate. This is ahead of where most teams are at this point — the work left is mostly evidencing and testing it under real (not scripted) conditions. |
 | Iteration limits | ✅ | `MAX_ITERATIONS = 4` in the ReAct loop. |
-| Logs/traces | ⚠️ | `admin_activity_logs` captures approval decisions and assignments; there's no general-purpose trace log yet for agent reasoning/tool calls end-to-end (flagged in `docs/week-3-hillary.md`, Task 18 — was blocked on the live loop existing, which it now does). |
-| Failure Catalogue | ❌ | Not compiled as its own artifact, but the raw material already exists scattered across "Known limitation" sections in `ai-boundary-matrix.md`, `function-calling-schemas.md`, `model-abstraction-and-rate-limiting.md`, `clarification-prompting-logic.md`, and `evaluation-table.md` — this is a compilation task, not a from-scratch investigation. |
-| CI / E2E tests | ❌ | No GitHub Actions workflow and no automated test suite exist yet (`docs/week-3-hillary.md`, Tasks 19–20) — this is the biggest genuinely-unstarted piece by this point in the timeline. |
+| Logs/traces | ✅ | `agent_trace_logs` records retrieval, each model/tool call (latency, tokens, errors) and the outcome per run; verified live 13 Oct. Live tool-calling run with tokens captured 13 Oct. |
+| Failure Catalogue | ✅ | Compiled 13 Oct in `docs/failure-catalogue.md` (9 entries; F4 still open). Originally: not compiled as its own artifact, but the raw material already exists scattered across "Known limitation" sections in `ai-boundary-matrix.md`, `function-calling-schemas.md`, `model-abstraction-and-rate-limiting.md`, `clarification-prompting-logic.md`, and `evaluation-table.md` — this is a compilation task, not a from-scratch investigation. |
+| CI / E2E tests | ✅ | CI is the existing Docker build/publish workflows in `resolv-hq-backend` and `resolv-hq` (no separate lint/test workflow, by choice). `tests/e2e-chat-journey.test.ts` runs the real chat and approval routes end to end with the model and database faked. |
 
 ## Action plan
 
@@ -33,8 +33,8 @@
 ## Deliverables checklist
 
 - [ ] 30+ scenario evaluation set, run against live model in the final domain
-- [ ] Trace logging for agent reasoning/tool calls
-- [ ] Failure Catalogue (≥5 failures, re-tested)
-- [ ] Baseline CI workflow (lint, typecheck, Docker build)
-- [ ] Minimal E2E test suite
+- [x] Trace logging for agent reasoning/tool calls (code, tests, migration and one live Gemini run verified — see `evidence/traces/week-7-trace-logging.md`)
+- [x] Failure Catalogue (≥5 failures, re-tested) — `docs/failure-catalogue.md`; F4 (KFC document) still open
+- [x] Baseline CI workflow — existing Docker build workflows (no lint/typecheck/test step)
+- [x] Minimal E2E test suite — `resolv-hq-backend/tests/e2e-chat-journey.test.ts` (6 tests)
 - [ ] Week 7 progress report
