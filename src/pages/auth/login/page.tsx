@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Icon } from "@/components/ui/icon";
-import { CheckmarkCircle02Icon, Cancel01Icon, SparklesIcon } from "@hugeicons/core-free-icons";
+import { CheckmarkCircle02Icon, Cancel01Icon, SparklesIcon, ViewIcon, ViewOffIcon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/backend/supabase/client";
 
 // Mirrors the boundary matrix enforced in resolv-hq-backend (see
@@ -22,6 +22,7 @@ export default function LoginPage() {
   const [searchParams] = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -42,7 +43,7 @@ export default function LoginPage() {
       return;
     }
 
-    const next = searchParams.get("next") ?? "/dashboard";
+    const next = searchParams.get("next") ?? "/agent";
     navigate(next, { replace: true });
   }
 
@@ -134,16 +135,27 @@ export default function LoginPage() {
               <label htmlFor="password" className="text-sm font-medium text-foreground">
                 Password
               </label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="••••••••"
-                className="h-12 rounded-lg px-3.5 text-base md:text-base"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="••••••••"
+                  className="h-12 rounded-lg px-3.5 pr-12 text-base md:text-base"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((shown) => !shown)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-pressed={showPassword}
+                  className="absolute inset-y-0 right-0 flex w-12 items-center justify-center rounded-r-lg text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
+                >
+                  <Icon icon={showPassword ? ViewOffIcon : ViewIcon} size={18} />
+                </button>
+              </div>
             </div>
 
             {error && (

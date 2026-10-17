@@ -7,6 +7,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3001
 export type RealtimeEvent =
   | { type: "notification"; notification: AppNotification }
   | { type: "message"; requestId: string; message: TicketMessage }
+  | { type: "scheduler"; topic: string; event: unknown }
   | { type: "typing"; requestId: string; userId: string; senderType: "customer" | "admin" | "agent"; typing: boolean }
 
 type Listener = (event: RealtimeEvent) => void
@@ -19,6 +20,11 @@ let holders = 0
 let abort: AbortController | null = null
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null
 let attempts = 0
+/** Sockets that closed before the server said "ready"; after a few, fall back to SSE. */
+let socketFailures = 0
+const MAX_SOCKET_FAILURES = 3
+const CLOSE_UNAUTHORIZED = 4401
+const PING_MS = 25_000
 
 /** Subscribe to every pushed event. Returns an unsubscribe function. */
 export function onRealtimeEvent(listener: Listener): () => void {
@@ -42,6 +48,8 @@ export function retainRealtime(): () => void {
 }
 
 function disconnect() {
+  closeSocket()
+  socketFailures = 0
   abort?.abort()
   abort = null
   if (reconnectTimer) clearTimeout(reconnectTimer)
@@ -56,7 +64,58 @@ function scheduleReconnect() {
   reconnectTimer = setTimeout(() => void connect(), delay)
 }
 
+let socket: WebSocket | null = null
+let pingTimer: ReturnType<typeof setInterval> | null = null
+
+function closeSocket() {
+  if (pingTimer) clearInterval(pingTimer)
+  pingTimer = null
+  const s = socket
+  socket = null
+  if (s && s.readyState <= WebSocket.OPEN) s.close()
+}
+
+/** Primary transport: one WebSocket to the backend's /ws, authenticated by its first message. */
+async function connectSocket() {
+  const {
+    data: { session },
+  } = await createBrowserSupabaseClient().auth.getSession()
+  if (holders === 0) return
+  if (!session?.access_token) throw new Error("not signed in")
+
+  const ws = new WebSocket(`${API_BASE_URL.replace(/^http/, "ws")}/ws`)
+  socket = ws
+  let ready = false
+  ws.onopen = () => ws.send(JSON.stringify({ type: "auth", token: session.access_token }))
+  ws.onmessage = (e) => {
+    if (typeof e.data !== "string") return
+    if (!ready) {
+      ready = true
+      attempts = 0
+      socketFailures = 0
+      pingTimer = setInterval(() => ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify({ type: "ping" })), PING_MS)
+    }
+    if (e.data === '{"type":"ready"}' || e.data === '{"type":"pong"}') return
+    dispatch(`data: ${e.data}`)
+  }
+  ws.onclose = (e) => {
+    if (socket !== ws) return // closed on purpose
+    closeSocket()
+    if (!ready && e.code !== CLOSE_UNAUTHORIZED) socketFailures += 1
+    scheduleReconnect()
+  }
+  ws.onerror = () => ws.close()
+}
+
 async function connect() {
+  if (socketFailures < MAX_SOCKET_FAILURES) {
+    try {
+      await connectSocket()
+    } catch {
+      scheduleReconnect()
+    }
+    return
+  }
   const controller = new AbortController()
   abort = controller
   try {

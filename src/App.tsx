@@ -7,7 +7,7 @@ import AdminPage from "@/pages/admin/page"
 import ConsoleLayout from "@/pages/console/console-layout"
 import DashboardPage from "@/pages/console/dashboard/page"
 import AgentWorkspacePage from "@/pages/console/agent/page"
-import AgentFlowPage from "@/pages/console/flow/page"
+import SchedulerPage from "@/pages/console/scheduler/page"
 import TracesPage from "@/pages/console/traces/page"
 import TicketsPage from "@/pages/console/tickets/page"
 import TicketDetailPage from "@/pages/console/tickets/ticket-detail-page"
@@ -30,7 +30,8 @@ export default function App() {
           <Route element={<ConsoleLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/agent" element={<AgentWorkspacePage />} />
-            <Route path="/flow" element={<AgentFlowPage />} />
+            <Route path="/scheduler" element={<SchedulerPage />} />
+            <Route path="/flow" element={<Navigate to="/scheduler" replace />} />
             <Route path="/traces" element={<TracesPage />} />
             <Route path="/tickets" element={<TicketsPage />} />
             <Route path="/tickets/:id" element={<TicketDetailPage />} />
@@ -42,8 +43,8 @@ export default function App() {
           </Route>
         </Route>
 
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<Navigate to="/agent" replace />} />
+        <Route path="*" element={<Navigate to="/agent" replace />} />
       </Routes>
       <Toaster />
     </>
