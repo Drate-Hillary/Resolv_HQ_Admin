@@ -151,8 +151,8 @@ The brief wants traces of the *real* agent loop, including a genuine failure and
 
 ### 🟡 P2 — consolidation and evidence hygiene
 
-**Trace/logging pipeline extended** *(Week 7 · Owner: DDL)*
-`admin_activity_logs` already captures approval decisions and assignments with real structure — a solid foundation — but nothing yet logs the agent's own reasoning steps or tool calls now that the ReAct loop is live. **What's left:** extend the existing log table (or add a purpose-built one) to record each run's steps, latency, and outcome.
+**Trace/logging pipeline extended** *(Week 7 · Owner: DDL)* — **done 13 Oct**
+`agent_trace_logs` (migrations `20261012000000`, `20261013000000`) records, per run, the retrieval, every model call (provider, model, prompt version, latency, input/output tokens), every tool call (name, input, observation, error) and the final outcome. Verified live on run `34ed4362-…` (3 rows, 6.0 s model call). Staff read it back via `GET /admin/traces/:runId`, the console Traces & Logs page ("Show step trace") and the Agent activity timeline. Evidence: [`../../evidence/traces/week-7-trace-logging.md`](../../evidence/traces/week-7-trace-logging.md). Live tool-calling run with per-call latency and tokens captured 13 Oct (evidence file, "Live verification 2").
 
 **Scenario coverage scaled toward 30+** *(Week 7 · Owner: QSL)*
 The category shape is already right at 10 cases (see above); the brief's Week 7 minimum is 30+. **What's left:** add volume — more edge cases, more adversarial attempts, one failure case per tool — once the domain and live model are both settled, so the added cases aren't scenarios that need rewriting again later.
@@ -205,7 +205,7 @@ Depends on the domain fix and a genuinely live model being real by then — rehe
 
 ### 🟡 P2 — important but sequenced after the above
 
-**Failure Catalogue (≥5 failures, re-tested)** *(Week 7 · Owner: QSL)*
+**Failure Catalogue (≥5 failures, re-tested)** *(Week 7 · Owner: QSL)* — **compiled 13 Oct**: [`../failure-catalogue.md`](../failure-catalogue.md), 9 entries (F1–F9), 8 with a fix or mitigation and some re-test; **F4 (KFC document answering support queries) is still open and reproduces on the live model.** Original note:
 Not compiled yet, but the raw material already exists — "Known limitation" sections are scattered across `ai-boundary-matrix.md`, `function-calling-schemas.md`, `model-abstraction-and-rate-limiting.md`, `clarification-prompting-logic.md`, and `evaluation-table.md`, plus a new genuine one found during Week 4's tool testing: keyword-overlap retrieval can surface a coincidentally-matching article for an unrelated query instead of correctly reporting no grounding (see `docs/tool-failure-auth-test-evidence.md`). **What's left:** pull them into one catalogue, add any new failures found while scaling the eval set, and re-test each after a fix — this is compilation, not fresh investigation.
 
 **Week 7 progress report** *(Week 7 · Owner: PRL)*
@@ -216,10 +216,12 @@ Depends on the board existing and being kept current from Week 1 onward (see the
 
 ### 🟢 P3 — safe to skip unless time remains
 
-**Baseline CI workflow (lint/typecheck/Docker build)** *(Week 7 · Owner: DDL)*
+**Baseline CI workflow (lint/typecheck/Docker build)** *(Week 7 · Owner: DDL)* — **covered by the existing workflows**
+`resolv-hq-backend/.github/workflows/docker-image.yml` and `resolv-hq/.github/workflows/docker-publish.yml` build the Docker images on push/PR. They do not run lint, `tsc --noEmit` or tests; the team chose not to add a separate CI workflow. Checked locally 13 Oct: backend lint + tsc clean and 32 tests pass; console lint + tsc clean and 15 tests pass. Original note:
 Nothing under `.github/` covers this across any of the three repos today. Good practice, but not a brief requirement — see the earlier "features not necessary" review. Only worth doing if everything above is already closed.
 
-**Minimal E2E test suite** *(Week 7 · Owner: QSL)*
+**Minimal E2E test suite** *(Week 7 · Owner: QSL)* — **done 13 Oct**
+`resolv-hq-backend/tests/e2e-chat-journey.test.ts`: message → retrieval → tool call → escalation draft → staff approval/rejection through the real routes, plus boundary block, iteration cap, non-allow-listed tool and all-providers-down. Model and database are faked, so it needs no keys, Postgres or Redis. Original note:
 No automated test files exist in any repo. Same reasoning — a handful of manual, documented smoke tests satisfy the brief's "tests" line more efficiently than building an automated suite from scratch this late.
 
 ---
