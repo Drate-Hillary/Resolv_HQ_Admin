@@ -27,6 +27,14 @@ const OUTCOME_LABEL: Record<string, string> = {
   fallback: "Answered by keyword search (no model available)",
 }
 
+/** 842 -> "842", 2000 -> "2k", 2450 -> "2.4k", 12800 -> "12.8k", 1.2M -> "1.2M". */
+export function formatTokens(n: number): string {
+  const compact = (value: number, unit: string) => `${Math.floor(value * 10) / 10}${unit}`.replace(".0", "")
+  if (n < 1_000) return String(n)
+  if (n < 1_000_000) return compact(n / 1_000, "k")
+  return compact(n / 1_000_000, "M")
+}
+
 export function formatDuration(ms: number): string {
   return ms < 1000 ? `${ms} ms` : `${(ms / 1000).toFixed(1)} s`
 }
