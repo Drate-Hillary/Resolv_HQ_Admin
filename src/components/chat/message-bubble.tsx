@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { Copy01Icon, Tick02Icon } from "@hugeicons/core-free-icons"
+import { ReplyText } from "@/components/chat/reply-text"
 import { Icon } from "@/components/ui/icon"
 import type { ChatMessage } from "@/types"
 
@@ -53,7 +54,7 @@ export function MessageRow({ role, content, timestamp }: MessageRowProps) {
         R
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-[0.9375rem]/7 text-pretty whitespace-pre-wrap text-foreground">{content}</p>
+        <ReplyText content={content} className="text-[0.9375rem]/7 text-foreground" />
         <div className="mt-1 flex items-center gap-2 text-muted-foreground opacity-100 transition-opacity sm:opacity-0 sm:group-hover/msg:opacity-100 sm:focus-within:opacity-100">
           <button
             type="button"
