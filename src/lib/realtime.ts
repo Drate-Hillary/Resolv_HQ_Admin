@@ -8,6 +8,7 @@ export type RealtimeEvent =
   | { type: "notification"; notification: AppNotification }
   | { type: "message"; requestId: string; message: TicketMessage }
   | { type: "scheduler"; topic: string; event: unknown }
+  | { type: "usage"; conversationId: string; inputTokens: number; outputTokens: number }
   | { type: "typing"; requestId: string; userId: string; senderType: "customer" | "admin" | "agent"; typing: boolean }
 
 type Listener = (event: RealtimeEvent) => void

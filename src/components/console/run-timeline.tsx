@@ -1,7 +1,7 @@
 import { Icon } from "@/components/ui/icon"
 import { cn } from "cn"
 import { useConsoleStore } from "@/lib/stores/console-store"
-import { formatDuration } from "@/lib/run-timeline"
+import { formatDuration, formatTokens } from "@/lib/run-timeline"
 import type { RunStep } from "@/types/console"
 import { Tick02Icon, Alert02Icon, Cancel01Icon } from "@hugeicons/core-free-icons"
 
@@ -81,7 +81,7 @@ export function RunTimeline() {
     {lastRunTokens && (
       <p className="mt-1 text-xs text-muted-foreground tabular-nums">
         {lastRunTokens.input + lastRunTokens.output > 0
-          ? `${(lastRunTokens.input + lastRunTokens.output).toLocaleString()} tokens this run (${lastRunTokens.input.toLocaleString()} in · ${lastRunTokens.output.toLocaleString()} out) · ${sessionTokens.toLocaleString()} this conversation`
+          ? `${formatTokens(lastRunTokens.input + lastRunTokens.output)} tokens this run (${formatTokens(lastRunTokens.input)} in Â· ${formatTokens(lastRunTokens.output)} out) Â· ${formatTokens(sessionTokens)} this conversation`
           : "No tokens used this run (answered from cache or without a model call)"}
       </p>
     )}
