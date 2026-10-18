@@ -19,8 +19,11 @@ export function RunTimeline() {
   const run = useConsoleStore((s) => s.run)
   const selectedStepKey = useConsoleStore((s) => s.selectedStepKey)
   const selectStep = useConsoleStore((s) => s.selectStep)
+  const lastRunTokens = useConsoleStore((s) => s.lastRunTokens)
+  const sessionTokens = useConsoleStore((s) => s.sessionTokens)
 
   return (
+    <>
     <ol className="flex flex-col">
       {run.map((step, i) => {
         const isLast = i === run.length - 1
@@ -55,13 +58,13 @@ export function RunTimeline() {
                   {step.label}
                 </p>
                 {isHandoff && (
-                  <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold tracking-wide text-primary">
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold tracking-wide text-primary">
                     Hand Off
                   </span>
                 )}
               </div>
               {(step.meta?.latencyMs != null || step.meta?.tokens) && (
-                <p className="mt-0.5 text-[10px] text-muted-foreground tabular-nums">
+                <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
                   {[step.meta.latencyMs != null ? formatDuration(step.meta.latencyMs) : null, step.meta.tokens].filter(Boolean).join(" Â· ")}
                 </p>
               )}
@@ -75,6 +78,14 @@ export function RunTimeline() {
         )
       })}
     </ol>
+    {lastRunTokens && (
+      <p className="mt-1 text-xs text-muted-foreground tabular-nums">
+        {lastRunTokens.input + lastRunTokens.output > 0
+          ? `${(lastRunTokens.input + lastRunTokens.output).toLocaleString()} tokens this run (${lastRunTokens.input.toLocaleString()} in · ${lastRunTokens.output.toLocaleString()} out) · ${sessionTokens.toLocaleString()} this conversation`
+          : "No tokens used this run (answered from cache or without a model call)"}
+      </p>
+    )}
+    </>
   )
 }
 

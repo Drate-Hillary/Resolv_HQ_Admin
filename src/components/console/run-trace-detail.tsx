@@ -58,13 +58,13 @@ export function RunTraceDetail({ runId }: { runId: string }) {
         const tokens = r.input_tokens != null || r.output_tokens != null ? `${r.input_tokens ?? 0} in · ${r.output_tokens ?? 0} out` : null
         return (
           <li key={r.seq} className="relative flex gap-3">
-            <span className="z-10 mt-2.5 flex size-[1.6rem] shrink-0 items-center justify-center rounded-full border border-border bg-background text-[10px] text-muted-foreground tabular-nums">
+            <span className="z-10 mt-2.5 flex size-[1.6rem] shrink-0 items-center justify-center rounded-full border border-border bg-background text-xs text-muted-foreground tabular-nums">
               {r.seq}
             </span>
             <div className={cn("min-w-0 flex-1 rounded-lg border bg-card p-3 text-xs", r.error ? "border-destructive/40" : "border-border")}>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="flex items-center gap-2">
-                  <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", KIND_STYLE[r.kind])}>{KIND_LABEL[r.kind]}</span>
+                  <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", KIND_STYLE[r.kind])}>{KIND_LABEL[r.kind]}</span>
                   {r.tool_name && <span className="font-medium text-foreground">{r.tool_name}</span>}
                 </span>
                 <span className="text-muted-foreground tabular-nums">

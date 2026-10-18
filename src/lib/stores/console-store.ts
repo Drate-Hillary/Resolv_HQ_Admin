@@ -44,6 +44,8 @@ interface ConsoleState {
   runStartedAt: number | null
   /** Real tokens reported by the provider across this conversation so far. */
   sessionTokens: number
+  /** Tokens the most recent run used, null until a run has finished. */
+  lastRunTokens: { input: number; output: number } | null
   runAgent: (request: string) => Promise<void>
   selectStep: (key: string | null) => void
   approve: () => Promise<void>
@@ -84,6 +86,7 @@ export const useConsoleStore = create<ConsoleState>()(
   error: null,
   runStartedAt: null,
   sessionTokens: 0,
+  lastRunTokens: null,
 
   selectStep: (key) => set({ selectedStepKey: key }),
 
@@ -100,6 +103,7 @@ export const useConsoleStore = create<ConsoleState>()(
       run: [],
       status: "thinking",
       runStartedAt: Date.now(),
+      lastRunTokens: null,
       selectedStepKey: null,
       approvalId: null,
       error: null,
@@ -139,6 +143,7 @@ export const useConsoleStore = create<ConsoleState>()(
           status: "awaiting_approval",
           runStartedAt: null,
           sessionTokens: s.sessionTokens + turnTokens,
+          lastRunTokens: { input: data.tokens?.input ?? 0, output: data.tokens?.output ?? 0 },
           approvalId: data.escalation!.approvalId,
           recentTasks: setTaskStatus(s.recentTasks, taskId, "awaiting_approval"),
         }))
@@ -149,7 +154,7 @@ export const useConsoleStore = create<ConsoleState>()(
           status: "done",
           detail: { type: "text", text: data.assistantMessage.content },
         })
-        set((s) => ({ run: steps, status: "completed", runStartedAt: null, sessionTokens: s.sessionTokens + turnTokens, recentTasks: setTaskStatus(s.recentTasks, taskId, "completed") }))
+        set((s) => ({ run: steps, status: "completed", runStartedAt: null, sessionTokens: s.sessionTokens + turnTokens, lastRunTokens: { input: data.tokens?.input ?? 0, output: data.tokens?.output ?? 0 }, recentTasks: setTaskStatus(s.recentTasks, taskId, "completed") }))
       }
 
       set((s) => ({
@@ -228,6 +233,7 @@ export const useConsoleStore = create<ConsoleState>()(
       error: null,
       runStartedAt: null,
       sessionTokens: 0,
+      lastRunTokens: null,
     })
   },
 

@@ -41,7 +41,7 @@ export function AgentWorkingIndicator() {
       <AgentThinkingOrb state={phase.state} />
       <span>{phase.label}</span>
       <span className="text-primary/60">· {(elapsed / 1000).toFixed(1)}s</span>
-      <span className="text-primary/60">· {sessionTokens.toLocaleString()} tokens</span>
+      {sessionTokens > 0 && <span className="text-primary/60">· {sessionTokens.toLocaleString()} tokens so far</span>}
     </div>
   )
 }

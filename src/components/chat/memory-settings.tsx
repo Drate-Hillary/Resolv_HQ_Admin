@@ -19,7 +19,7 @@ export function MemorySettings() {
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center justify-between text-sm font-medium">
           <span>Saved information</span>
-          <span className="rounded-full border border-primary/20 bg-primary/5 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-primary">
+          <span className="rounded-full border border-primary/20 bg-primary/5 px-2 py-0.5 text-xs font-medium uppercase tracking-[0.12em] text-primary">
             Profile
           </span>
         </CardTitle>

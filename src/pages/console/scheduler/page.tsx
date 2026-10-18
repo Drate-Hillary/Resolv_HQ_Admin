@@ -139,7 +139,7 @@ export default function SchedulerPage() {
           </p>
         </div>
         {feed && (
-          <span className="flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px] text-muted-foreground">
+          <span className="flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">
             <span className={cn("size-1.5 rounded-full", feed.queue.status === "connected" ? "bg-emerald-500" : "bg-amber-500")} />
             {queueLabel[feed.queue.status]}
           </span>

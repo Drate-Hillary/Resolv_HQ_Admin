@@ -69,7 +69,7 @@ const durationMs = (run: AgentRunRow) => (run.completed_at ? Date.parse(run.comp
 function Stat({ label, value, tone }: { label: string; value: string | number; tone?: string }) {
   return (
     <div className="glass-panel px-4 py-3">
-      <p className="text-[11px] text-muted-foreground">{label}</p>
+      <p className="text-xs text-muted-foreground">{label}</p>
       <p className={cn("mt-0.5 text-xl font-semibold tracking-tight tabular-nums", tone ?? "text-foreground")}>{value}</p>
     </div>
   )
@@ -91,7 +91,7 @@ function RunCard({ run, onOpen }: { run: AgentRunRow; onOpen: () => void }) {
         <Badge variant={statusVariant[run.status] ?? "default"}>{run.status.replace("_", " ")}</Badge>
       </div>
       <p className="text-xs text-muted-foreground">{formatStartedAt(run.started_at)}</p>
-      <div className="flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
+      <div className="flex flex-wrap gap-1.5 text-xs text-muted-foreground">
         {run.model && <span className="rounded-full bg-muted px-2 py-0.5">{run.model}</span>}
         <span className="rounded-full bg-muted px-2 py-0.5 tabular-nums">{run.iterations} iterations</span>
         {duration != null && <span className="rounded-full bg-muted px-2 py-0.5 tabular-nums">{formatDuration(duration)}</span>}
@@ -109,7 +109,7 @@ function RunCard({ run, onOpen }: { run: AgentRunRow; onOpen: () => void }) {
 function Detail({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
-      <dt className="text-[11px] text-muted-foreground">{label}</dt>
+      <dt className="text-xs text-muted-foreground">{label}</dt>
       <dd className="mt-0.5 text-xs text-foreground">{children}</dd>
     </div>
   )
