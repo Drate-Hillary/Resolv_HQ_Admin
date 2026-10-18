@@ -78,13 +78,13 @@ function Card({ card, now, selected, onOpen }: { card: SchedulerCard; now: numbe
       <div className="flex items-center justify-between gap-2">
         <span
           className={cn(
-            "rounded-full px-1.5 py-px text-[10px] font-medium",
+            "rounded-full px-1.5 py-px text-xs font-medium",
             card.source === "customer" ? "bg-primary/10 text-foreground" : "bg-muted text-muted-foreground"
           )}
         >
           {sourceLabel[card.source]}
         </span>
-        <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
           {card.state === "running" ? <AgentThinkingOrb /> : <span className={cn("size-1.5 rounded-full", stateDot[card.state])} />}
           {stateLabel[card.state]}
         </span>
@@ -103,7 +103,7 @@ function Card({ card, now, selected, onOpen }: { card: SchedulerCard; now: numbe
         </button>
       )}
       <p className="mt-1.5 line-clamp-3 text-xs/relaxed text-foreground">{card.request}</p>
-      <p className="mt-1.5 line-clamp-2 text-[11px]/snug text-muted-foreground tabular-nums">
+      <p className="mt-1.5 line-clamp-2 text-xs/snug text-muted-foreground tabular-nums">
         {card.state === "scheduled" && card.source === "live" && card.runAt > now
           ? `Starts in ${countdown(card.runAt - now)}`
           : (last?.text ?? "")}
@@ -124,7 +124,7 @@ export function SchedulerBoard({ cards, now }: { cards: SchedulerCard[]; now: nu
             <section key={col.id} aria-label={col.title} className="flex min-w-40 flex-1 flex-col rounded-xl bg-muted/50 p-2">
               <header className="flex items-center justify-between gap-2 px-1 pb-2" title={col.role}>
                 <h3 className="truncate text-xs font-medium text-foreground">{col.title}</h3>
-                <span className="tabular-nums rounded-full bg-background px-1.5 text-[11px] text-muted-foreground">
+                <span className="tabular-nums rounded-full bg-background px-1.5 text-xs text-muted-foreground">
                   {inColumn.length}
                 </span>
               </header>

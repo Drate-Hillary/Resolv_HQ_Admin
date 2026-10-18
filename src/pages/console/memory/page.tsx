@@ -127,7 +127,7 @@ export default function MemoryMcpPage() {
                       <summary className="cursor-pointer font-medium text-foreground">
                         Input schema
                       </summary>
-                      <pre className="mt-2 overflow-x-auto rounded bg-background p-3 text-[11px]">
+                      <pre className="mt-2 overflow-x-auto rounded bg-background p-3 text-xs">
                         {JSON.stringify(tool.inputSchema, null, 2)}
                       </pre>
                     </details>

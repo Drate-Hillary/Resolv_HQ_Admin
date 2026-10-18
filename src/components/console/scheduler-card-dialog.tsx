@@ -122,7 +122,7 @@ export function SchedulerCardDialog({ card, onClose }: { card: SchedulerCard; on
           <dt className="text-muted-foreground">Stage</dt>
           <dd className="text-foreground">
             {columnTitle(card.column)}
-            <span className="block text-[11px] text-muted-foreground">{columnRole(card.column)}</span>
+            <span className="block text-xs text-muted-foreground">{columnRole(card.column)}</span>
           </dd>
           <dt className="text-muted-foreground">Status</dt>
           <dd className="text-foreground">{card.state.replace("_", " ")}</dd>

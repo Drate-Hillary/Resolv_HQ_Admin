@@ -287,7 +287,7 @@ export function McpTester({ registry }: { registry: RegistryTool[] }) {
                 <p className="text-sm text-muted-foreground">{selectedTool.description}</p>
                 <details>
                   <summary className="cursor-pointer text-xs font-medium text-foreground">Input and output schema</summary>
-                  <pre className="mt-2 overflow-x-auto rounded bg-background p-3 text-[11px]">
+                  <pre className="mt-2 overflow-x-auto rounded bg-background p-3 text-xs">
                     {pretty({ inputSchema: selectedTool.inputSchema, outputSchema: selectedTool.outputSchema })}
                   </pre>
                 </details>
@@ -330,11 +330,11 @@ export function McpTester({ registry }: { registry: RegistryTool[] }) {
                     ))}
                     {callBody?.error?.message && <p className="text-sm text-destructive">{callBody.error.message}</p>}
                     {callBody?.result?.structuredContent !== undefined && (
-                      <pre className="overflow-x-auto rounded bg-background p-3 text-[11px]">{pretty(callBody.result.structuredContent)}</pre>
+                      <pre className="overflow-x-auto rounded bg-background p-3 text-xs">{pretty(callBody.result.structuredContent)}</pre>
                     )}
                     <details>
                       <summary className="cursor-pointer text-xs font-medium text-foreground">Raw request and response</summary>
-                      <pre className="mt-2 overflow-x-auto rounded bg-background p-3 text-[11px]">
+                      <pre className="mt-2 overflow-x-auto rounded bg-background p-3 text-xs">
                         {pretty({ request: callResult.request, response: callResult.body })}
                       </pre>
                     </details>

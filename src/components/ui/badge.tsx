@@ -1,9 +1,9 @@
-import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
+import { motion, type HTMLMotionProps } from "framer-motion"
 import { cn } from "cn"
 
 const badgeVariants = cva(
-  "inline-flex w-fit shrink-0 items-center justify-center gap-1 rounded-sm border border-transparent px-1.5 py-0.5 text-sm/tight font-medium whitespace-nowrap [&_svg]:pointer-events-none [&_svg]:size-3 [&_svg]:shrink-0",
+  "inline-flex w-fit shrink-0 items-center justify-center gap-1 rounded-full border border-transparent px-2.5 py-0.5 text-xs/tight font-medium whitespace-nowrap [&_svg]:pointer-events-none [&_svg]:size-3 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -28,10 +28,14 @@ function Badge({
   className,
   variant,
   ...props
-}: React.ComponentProps<"span"> & VariantProps<typeof badgeVariants>) {
+}: HTMLMotionProps<"span"> & VariantProps<typeof badgeVariants>) {
   return (
-    <span
+    <motion.span
       data-slot="badge"
+      initial={{ opacity: 0, scale: 0.85 }}
+      animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ scale: 1.05 }}
+      transition={{ type: "spring", stiffness: 500, damping: 30 }}
       className={cn(badgeVariants({ variant, className }))}
       {...props}
     />
