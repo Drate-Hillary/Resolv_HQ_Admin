@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import type { OrbState } from "thinking-orbs"
 import { AgentThinkingOrb } from "@/components/console/agent-thinking-orb"
+import { formatTokens } from "@/lib/run-timeline"
 import { useConsoleStore } from "@/lib/stores/console-store"
 
 // The chat call is not streamed, so the UI cannot see which phase the agent is
@@ -23,6 +24,8 @@ function currentPhase(elapsedMs: number) {
 export function AgentWorkingIndicator() {
   const startedAt = useConsoleStore((s) => s.runStartedAt)
   const sessionTokens = useConsoleStore((s) => s.sessionTokens)
+  const liveTokens = useConsoleStore((s) => s.liveTokens)
+  const totalTokens = sessionTokens + liveTokens
   const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
@@ -41,7 +44,7 @@ export function AgentWorkingIndicator() {
       <AgentThinkingOrb state={phase.state} />
       <span>{phase.label}</span>
       <span className="text-primary/60">· {(elapsed / 1000).toFixed(1)}s</span>
-      <span className="text-primary/60">· {sessionTokens.toLocaleString()} tokens</span>
+      {totalTokens > 0 && <span className="text-primary/60">· {formatTokens(totalTokens)} tokens</span>}
     </div>
   )
 }

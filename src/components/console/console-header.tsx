@@ -23,6 +23,7 @@ const pageLabels: Record<string, string> = {
   "/tools": "Tools",
   "/traces": "Traces & Logs",
   "/memory": "Memory & MCP",
+  "/architecture": "Architecture",
 }
 
 export function ConsoleHeader() {

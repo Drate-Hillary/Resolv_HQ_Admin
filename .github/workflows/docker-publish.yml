@@ -9,11 +9,11 @@ on:
   schedule:
     - cron: '31 6 * * *'
   push:
-    branches: [ "staging" ]
+    branches: [ "staging", "main" ]
     # Publish semver tags as releases.
     tags: [ 'v*.*.*' ]
   pull_request:
-    branches: [ "staging" ]
+    branches: [ "staging", "main" ]
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -76,6 +76,12 @@ jobs:
         uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
         with:
           context: .
+          # Vite inlines these into the browser bundle, so they are needed at build time.
+          # Set them per repo (Settings > Variables); they are public values.
+          build-args: |
+            VITE_SUPABASE_URL=${{ vars.VITE_SUPABASE_URL }}
+            VITE_SUPABASE_PUBLISHABLE_KEY=${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+            VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

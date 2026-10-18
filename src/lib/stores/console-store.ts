@@ -2,6 +2,7 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import { apiClient } from "@/backend/api/client"
 import { toastError } from "@/lib/errors"
+import { onRealtimeEvent, retainRealtime } from "@/lib/realtime"
 import { timelineToSteps, type TimelineRow } from "@/lib/run-timeline"
 import type { AgentStatus, RecentTask, RunStep } from "@/types/console"
 
@@ -44,6 +45,10 @@ interface ConsoleState {
   runStartedAt: number | null
   /** Real tokens reported by the provider across this conversation so far. */
   sessionTokens: number
+  /** Tokens the run in flight has used so far, pushed by the backend after each model call. */
+  liveTokens: number
+  /** Tokens the most recent run used, null until a run has finished. */
+  lastRunTokens: { input: number; output: number } | null
   runAgent: (request: string) => Promise<void>
   selectStep: (key: string | null) => void
   approve: () => Promise<void>
@@ -84,6 +89,8 @@ export const useConsoleStore = create<ConsoleState>()(
   error: null,
   runStartedAt: null,
   sessionTokens: 0,
+  liveTokens: 0,
+  lastRunTokens: null,
 
   selectStep: (key) => set({ selectedStepKey: key }),
 
@@ -100,10 +107,21 @@ export const useConsoleStore = create<ConsoleState>()(
       run: [],
       status: "thinking",
       runStartedAt: Date.now(),
+      liveTokens: 0,
+      lastRunTokens: null,
       selectedStepKey: null,
       approvalId: null,
       error: null,
       messages: [...get().messages, { id: `local-${uid()}`, role: "user", content: request }],
+    })
+
+    // The chat call is not streamed, so the backend pushes each model call's
+    // usage over the realtime channel; add it up here as it arrives.
+    const releaseRealtime = retainRealtime()
+    const stopUsage = onRealtimeEvent((event) => {
+      if (event.type === "usage" && event.conversationId === get().conversationId) {
+        set((s) => ({ liveTokens: s.liveTokens + event.inputTokens + event.outputTokens }))
+      }
     })
 
     try {
@@ -139,6 +157,8 @@ export const useConsoleStore = create<ConsoleState>()(
           status: "awaiting_approval",
           runStartedAt: null,
           sessionTokens: s.sessionTokens + turnTokens,
+          liveTokens: 0,
+          lastRunTokens: { input: data.tokens?.input ?? 0, output: data.tokens?.output ?? 0 },
           approvalId: data.escalation!.approvalId,
           recentTasks: setTaskStatus(s.recentTasks, taskId, "awaiting_approval"),
         }))
@@ -149,7 +169,7 @@ export const useConsoleStore = create<ConsoleState>()(
           status: "done",
           detail: { type: "text", text: data.assistantMessage.content },
         })
-        set((s) => ({ run: steps, status: "completed", runStartedAt: null, sessionTokens: s.sessionTokens + turnTokens, recentTasks: setTaskStatus(s.recentTasks, taskId, "completed") }))
+        set((s) => ({ run: steps, status: "completed", runStartedAt: null, sessionTokens: s.sessionTokens + turnTokens, liveTokens: 0, lastRunTokens: { input: data.tokens?.input ?? 0, output: data.tokens?.output ?? 0 }, recentTasks: setTaskStatus(s.recentTasks, taskId, "completed") }))
       }
 
       set((s) => ({
@@ -159,6 +179,8 @@ export const useConsoleStore = create<ConsoleState>()(
       set((s) => ({
         status: "failed",
         runStartedAt: null,
+        sessionTokens: s.sessionTokens + s.liveTokens,
+        liveTokens: 0,
         recentTasks: setTaskStatus(s.recentTasks, taskId, "failed"),
         error: toastError(err, "The agent failed to respond"),
         messages: [
@@ -170,6 +192,9 @@ export const useConsoleStore = create<ConsoleState>()(
           },
         ],
       }))
+    } finally {
+      stopUsage()
+      releaseRealtime()
     }
   },
 
@@ -228,6 +253,8 @@ export const useConsoleStore = create<ConsoleState>()(
       error: null,
       runStartedAt: null,
       sessionTokens: 0,
+      liveTokens: 0,
+      lastRunTokens: null,
     })
   },
 
