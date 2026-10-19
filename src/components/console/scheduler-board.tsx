@@ -69,10 +69,10 @@ function Card({ card, now, selected, onOpen }: { card: SchedulerCard; now: numbe
       onKeyDown={onKey}
       transition={{ type: "spring", stiffness: 380, damping: 34 }}
       className={cn(
-        "group/card relative cursor-pointer rounded-lg border border-border bg-card p-2.5 text-left text-card-foreground shadow-xs outline-none hover:border-foreground/25 focus-visible:ring-2 focus-visible:ring-ring/40",
-        selected && "border-foreground/40",
-        card.state === "running" && "border-primary/50",
-        card.state === "failed" && "border-destructive/50"
+        "group/card relative cursor-pointer rounded-lg bg-background p-2.5 text-left text-card-foreground shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+        selected && "ring-1 ring-foreground/30",
+        card.state === "running" && "ring-1 ring-primary/50",
+        card.state === "failed" && "ring-1 ring-destructive/50"
       )}
     >
       <div className="flex items-center justify-between gap-2">

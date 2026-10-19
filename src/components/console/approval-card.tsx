@@ -25,7 +25,7 @@ export function ApprovalCard() {
         </div>
       </div>
 
-      <dl className="mt-3 grid grid-cols-2 gap-2.5 rounded-md border border-border px-3 py-2.5 text-sm">
+      <dl className="mt-3 grid grid-cols-2 gap-2.5 rounded-md bg-muted/50 px-3 py-2.5 text-sm">
         <div className="col-span-2">
           <dt className="text-muted-foreground">Ticket</dt>
           <dd className="mt-0.5 text-foreground">{title}</dd>

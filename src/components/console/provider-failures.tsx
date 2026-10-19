@@ -3,7 +3,7 @@ import { parseProviderFailures, type ProviderFailure } from "@/lib/provider-erro
 /** One provider's failure as a Provider / Error / Cause / Fix card. */
 export function ProviderFailureCard({ failure }: { failure: ProviderFailure }) {
   return (
-    <dl className="grid grid-cols-[4.5rem_1fr] gap-x-3 gap-y-1 rounded-md border border-border bg-muted/30 p-3 text-xs">
+    <dl className="grid grid-cols-[4.5rem_1fr] gap-x-3 gap-y-1 rounded-md bg-muted/50 p-3 text-xs">
       <dt className="text-muted-foreground">Provider</dt>
       <dd className="font-medium text-foreground">{failure.provider}</dd>
       <dt className="text-muted-foreground">Error</dt>

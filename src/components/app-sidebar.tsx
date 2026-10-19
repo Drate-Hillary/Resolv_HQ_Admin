@@ -111,7 +111,7 @@ export function AppSidebar({
               <div className="flex aspect-square size-8 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground">
                 <HugeiconsIcon icon={SparklesIcon} strokeWidth={2} />
               </div>
-              <span className="truncate text-lg font-bold">Resolv-HQ</span>
+              <span className="truncate text-base font-bold">Resolv-HQ</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>

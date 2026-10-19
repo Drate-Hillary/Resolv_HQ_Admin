@@ -37,7 +37,7 @@ export function ActivityBubble() {
       </PopoverTrigger>
       <PopoverContent align="end" className="flex max-h-[70vh] w-[min(22rem,calc(100vw-2rem))] flex-col gap-3 overflow-y-auto p-3">
         <p className="text-sm font-medium text-foreground">Agent activity</p>
-        <div className="w-fit max-w-full rounded-lg rounded-bl-sm border border-border bg-card px-3 py-2 text-xs/relaxed text-card-foreground">
+        <div className="w-fit max-w-full rounded-lg rounded-bl-sm bg-muted px-3 py-2 text-xs/relaxed text-card-foreground">
           <p>{processLabel[status]}</p>
           {lastStep && !busy && <p className="mt-1 text-muted-foreground">Last step: {lastStep.label}</p>}
           {error && <p className="mt-1 text-destructive">{error}</p>}

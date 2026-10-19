@@ -28,7 +28,7 @@ export function StatCard({
           <Icon icon={icon} size={18} />
         </span>
       </div>
-      <p className={cn("tabular truncate text-2xl font-semibold tracking-tight", tone === "danger" ? "text-destructive" : "text-foreground")}>
+      <p className={cn("tabular truncate text-xl font-semibold tracking-tight", tone === "danger" ? "text-destructive" : "text-foreground")}>
         {value}
       </p>
     </div>

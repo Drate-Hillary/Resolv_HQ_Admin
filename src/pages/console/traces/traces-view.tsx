@@ -70,7 +70,7 @@ function Stat({ label, value, tone }: { label: string; value: string | number; t
   return (
     <div className="glass-panel px-4 py-3">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={cn("mt-0.5 text-xl font-semibold tracking-tight tabular-nums", tone ?? "text-foreground")}>{value}</p>
+      <p className={cn("mt-0.5 text-lg font-semibold tracking-tight tabular-nums", tone ?? "text-foreground")}>{value}</p>
     </div>
   )
 }
@@ -82,7 +82,7 @@ function RunCard({ run, onOpen }: { run: AgentRunRow; onOpen: () => void }) {
       type="button"
       onClick={onOpen}
       className={cn(
-        "glass-panel relative flex flex-col gap-3 overflow-hidden p-4 pl-5 text-left outline-none transition-colors before:absolute before:inset-y-0 before:left-0 before:w-1 hover:border-foreground/25 focus-visible:ring-2 focus-visible:ring-ring/40",
+        "glass-panel relative flex flex-col gap-3 overflow-hidden p-4 pl-5 text-left outline-none transition-colors before:absolute before:inset-y-0 before:left-0 before:w-1 focus-visible:ring-2 focus-visible:ring-ring/40",
         statusAccent[run.status]
       )}
     >
