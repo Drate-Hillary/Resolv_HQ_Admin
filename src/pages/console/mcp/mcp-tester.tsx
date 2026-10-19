@@ -366,7 +366,7 @@ export function McpTester({ registry }: { registry: RegistryTool[] }) {
                 {passed} of {suite.length} checks passed
               </Badge>
               {suite.map((check, index) => (
-                <div key={`${check.name}-${index}`} className="flex items-start gap-3 rounded-md border border-border/70 bg-muted/20 p-3">
+                <div key={`${check.name}-${index}`} className="flex items-start gap-3 rounded-md bg-muted/50 p-3">
                   <Badge variant={check.status === "pass" ? "approve" : "destructive"}>{check.status}</Badge>
                   <div className="min-w-0 space-y-1">
                     <p className="text-sm font-medium text-foreground">{check.name}</p>

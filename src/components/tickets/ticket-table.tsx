@@ -64,7 +64,7 @@ export function TicketTable() {
   }
 
   return (
-    <div className="overflow-hidden rounded-md border border-border">
+    <div className="overflow-hidden rounded-md bg-muted/30">
       <table className="w-full text-left text-sm">
         <thead className="bg-accent/40 text-sm text-muted-foreground">
           <tr>

@@ -80,6 +80,7 @@ export default function SchedulerPage() {
   const clearFinished = useSchedulerStore((s) => s.clearFinished)
   const recentTasks = useConsoleStore((s) => s.recentTasks)
   const consoleStatus = useConsoleStore((s) => s.status)
+  const conversationId = useConsoleStore((s) => s.conversationId)
 
   const [request, setRequest] = useState("")
   const [when, setWhen] = useState("")
@@ -111,9 +112,16 @@ export default function SchedulerPage() {
         log: [],
         createdAt: t.startedAt,
       }))
-    const customer = (feed?.tasks ?? []).map(taskToCard).filter((c) => !dismissed.includes(c.id))
+    // A run staff started here is also a backend agent run, so the feed reports it too.
+    // Its own card already shows it; only conversations started elsewhere are customer tasks.
+    const ownConversations = new Set<string>(cards.flatMap((c) => (c.conversationId ? [c.conversationId] : [])))
+    if (conversationId) ownConversations.add(conversationId)
+    const customer = (feed?.tasks ?? [])
+      .filter((t) => !t.conversationId || !ownConversations.has(t.conversationId))
+      .map(taskToCard)
+      .filter((c) => !dismissed.includes(c.id))
     return [...customer, ...history, ...cards]
-  }, [cards, recentTasks, feed, dismissed])
+  }, [cards, recentTasks, conversationId, feed, dismissed])
 
   const hasFinished = cards.some((c) => c.state === "done" || c.state === "failed")
   const waitingOnApproval = consoleStatus === "awaiting_approval"
@@ -175,7 +183,7 @@ export default function SchedulerPage() {
           <p className="min-w-0 flex-1 text-xs/relaxed text-muted-foreground">
             Tasks you schedule call the real agent, one at a time, each as a new task in Chat. They wait while a task is
             awaiting approval{waitingOnApproval ? " (one is waiting now: decide it in Chat)" : ""}. Tasks scheduled here
-            are kept in this browser tab only and are lost on reload; customer tasks and tickets are read from the
+            are saved in this browser and survive a reload (one that was running when you reloaded is marked interrupted); customer tasks and tickets are read from the
             backend.
           </p>
           <Button variant="ghost" size="sm" onClick={clearFinished} disabled={!hasFinished}>

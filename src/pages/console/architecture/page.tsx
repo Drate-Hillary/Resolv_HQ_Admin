@@ -140,7 +140,7 @@ export default function ArchitecturePage() {
     <div className="flex flex-col gap-4 p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">System architecture</h1>
+          <h1 className="text-lg font-semibold tracking-tight">System architecture</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
             How a message moves through Resolv-HQ, drawn as a workflow. Select a node to open its details, or trace one message from the customer to the console.
           </p>
@@ -165,7 +165,7 @@ export default function ArchitecturePage() {
         ))}
       </div>
 
-      <div className="overflow-auto rounded-xl border border-border bg-muted/30 bg-[radial-gradient(var(--border)_1px,transparent_1px)] [background-size:20px_20px]">
+      <div className="overflow-auto rounded-xl bg-muted/30 bg-[radial-gradient(var(--border)_1px,transparent_1px)] [background-size:20px_20px]">
         <div className="relative" style={{ width, height }}>
           <svg className="absolute inset-0" width={width} height={height} aria-hidden>
             {edges.map((e, i) => (
@@ -214,7 +214,7 @@ export default function ArchitecturePage() {
       </div>
 
       {step !== null && current && (
-        <p className="rounded-xl border border-border bg-card p-4 text-sm">
+        <p className="rounded-xl bg-muted/50 p-4 text-sm">
           <span className="font-medium">
             Step {step + 1} of {walkthrough.length}: {nodeById.get(current)!.title}.
           </span>{" "}

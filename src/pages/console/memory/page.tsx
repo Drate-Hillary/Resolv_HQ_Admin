@@ -53,7 +53,7 @@ export default function MemoryMcpPage() {
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
           Memory + MCP
         </p>
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+        <h1 className="text-lg font-semibold tracking-tight text-foreground">
           Memory and tool discovery
         </h1>
         <p className="max-w-3xl text-sm text-muted-foreground">
@@ -81,7 +81,7 @@ export default function MemoryMcpPage() {
             {memory.keys.map(({ key, recordCount }) => (
               <div
                 key={key}
-                className="flex items-center justify-between gap-4 rounded-md border border-border/70 bg-muted/20 p-3"
+                className="flex items-center justify-between gap-4 rounded-md bg-muted/50 p-3"
               >
                 <span className="text-sm font-medium capitalize text-foreground">{displayKey(key)}</span>
                 <Badge variant="secondary">{recordCount} records</Badge>
@@ -103,7 +103,7 @@ export default function MemoryMcpPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             {tools.map((tool) => (
-              <div key={tool.id} className="rounded-md border border-border/70 bg-muted/20 p-3">
+              <div key={tool.id} className="rounded-md bg-muted/50 p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="text-sm font-semibold text-foreground">{tool.name}</h3>
                   <div className="flex gap-2">
@@ -172,7 +172,7 @@ function SummaryCard({ label, value }: { label: string; value: number | string }
         <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-2xl font-semibold text-foreground">{value}</p>
+        <p className="text-xl font-semibold text-foreground">{value}</p>
       </CardContent>
     </Card>
   )

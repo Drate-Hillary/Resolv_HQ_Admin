@@ -7,8 +7,8 @@ const FEED_POLL_MS = 30_000
 
 /**
  * Runs the scheduler. Mounted once in the console layout so scheduled tasks still fire, and customer
- * tickets and tasks still arrive, while you are on another page. Staff-scheduled cards live in memory
- * only, so a page reload clears them; the customer feed is read from the backend and survives.
+ * tickets and tasks still arrive, while you are on another page. Staff-scheduled cards are persisted in
+ * the browser; the customer feed is read from the backend.
  */
 export function useSchedulerEngine() {
   useEffect(() => {

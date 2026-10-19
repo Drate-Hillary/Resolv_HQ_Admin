@@ -63,7 +63,7 @@ export function ToolsView({ initialTools }: { initialTools: AgentToolRow[] }) {
               {tool.requires_approval && <Badge variant="default">approval required</Badge>}
             </div>
             <button
-              className="mt-3 rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted"
+              className="mt-3 rounded-md bg-muted/50 px-3 py-1.5 text-xs font-medium hover:bg-muted"
               onClick={() => setSelected(tool)}
             >
               View details

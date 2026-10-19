@@ -33,7 +33,7 @@ export function MemorySettings() {
         {customerMemoryFacts.map((fact) => (
           <div
             key={fact.id}
-            className="space-y-2 rounded-md border border-border/70 bg-muted/20 p-3"
+            className="space-y-2 rounded-md bg-muted/50 p-3"
           >
             <div className="flex items-center justify-between gap-3">
               <div className="text-xs font-medium text-foreground">{fact.label}</div>

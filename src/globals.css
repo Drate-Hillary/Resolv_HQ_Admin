@@ -67,7 +67,7 @@
 :root {
   --background: #ffffff;
   --foreground: #000000;
-  --card: #ffffff;
+  --card: #f6f6f6;
   --card-foreground: #000000;
   --popover: #ffffff;
   --popover-foreground: #000000;
@@ -167,7 +167,7 @@
 
 @layer utilities {
   .glass-panel {
-    @apply rounded-lg border border-black/8 bg-black/[0.015] backdrop-blur-xl backdrop-saturate-150;
+    @apply rounded-lg bg-muted/50;
   }
   .tabular {
     font-variant-numeric: tabular-nums;
