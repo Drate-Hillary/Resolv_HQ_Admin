@@ -22,7 +22,10 @@ export function ProviderFailures({ message }: { message: string }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-destructive">All registered providers failed.</p>
+      <p className="font-medium text-destructive">
+        {failures.length === 1 ? "The AI provider couldn't answer." : `None of the ${failures.length} AI providers could answer.`}
+      </p>
+      <p className="text-muted-foreground">The agent switched to the next provider each time one failed, and every one of them returned an error:</p>
       {failures.map((failure, index) => (
         <ProviderFailureCard key={`${failure.provider}-${index}`} failure={failure} />
       ))}

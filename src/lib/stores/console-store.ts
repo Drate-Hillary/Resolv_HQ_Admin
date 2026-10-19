@@ -1,7 +1,9 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import { apiClient } from "@/backend/api/client"
+import { toast } from "sonner"
 import { toastError } from "@/lib/errors"
+import { isProviderFailureMessage, summarizeProviderFailures } from "@/lib/provider-errors"
 import { onRealtimeEvent, retainRealtime } from "@/lib/realtime"
 import { timelineToSteps, type TimelineRow } from "@/lib/run-timeline"
 import type { AgentStatus, RecentTask, RunStep } from "@/types/console"
@@ -149,6 +151,10 @@ export const useConsoleStore = create<ConsoleState>()(
           : data.steps.map((text) => ({ key: `step-${uid()}`, label: text, status: "done" as const }))
       const turnTokens = (data.tokens?.input ?? 0) + (data.tokens?.output ?? 0)
 
+      // The reply is a fallback when every model provider failed; say why instead of letting it pass silently.
+      const providerFailure = data.timeline?.map((row) => row.error).find(isProviderFailureMessage)
+      if (providerFailure) toast.error(summarizeProviderFailures(providerFailure), { id: "provider-failure", duration: 10_000 })
+
       if (data.escalation) {
         steps.push({
           key: "approval",
@@ -192,7 +198,7 @@ export const useConsoleStore = create<ConsoleState>()(
           {
             id: `local-${uid()}`,
             role: "agent",
-            content: "Something went wrong reaching the agent — check that a provider is registered and active, and that the backend is reachable.",
+            content: "I couldn't reach the agent. Check that the backend is running and that at least one AI model is active on the AI Models page, then try again.",
           },
         ],
       }))
@@ -291,7 +297,6 @@ export const useConsoleStore = create<ConsoleState>()(
 }),
     {
       name: "resolv-console-workspace",
-      skipHydration: true,
       partialize: (s) => ({
         recentTasks: s.recentTasks.slice(0, 50),
         messages: s.messages,
