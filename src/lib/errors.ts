@@ -1,4 +1,5 @@
 import { toast } from "sonner"
+import { isProviderFailureMessage, summarizeProviderFailures } from "@/lib/provider-errors"
 
 interface ApiErrorShape {
   code?: string
@@ -19,11 +20,12 @@ export function getErrorMessage(err: unknown, fallback = "Something went wrong. 
     return "Can't reach the server. Check your connection and try again."
   }
   const serverMessage = e.response?.data?.error ?? e.response?.data?.message
+  if (isProviderFailureMessage(serverMessage)) return summarizeProviderFailures(serverMessage)
   if (serverMessage && status !== 500) return serverMessage
   if (status === 401) return "Your session has expired. Please sign in again."
   if (status === 403) return "You don't have permission to do that."
   if (status === 404) return "That item no longer exists."
-  if (status === 429) return "Too many requests — please wait a moment and try again."
+  if (status === 429) return "You're sending requests too quickly. Wait a few seconds and try again."
   if (status && status >= 500) return "The server hit a problem. Please try again shortly."
   return fallback
 }

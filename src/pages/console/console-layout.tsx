@@ -5,7 +5,6 @@ import { ConsoleHeader } from "@/components/console/console-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { createClient } from "@/backend/supabase/client"
 import { apiClient } from "@/backend/api/client"
-import { useConsoleStore } from "@/lib/stores/console-store"
 import { useSchedulerEngine } from "@/hooks/use-scheduler-engine"
 
 interface MeResponse {
@@ -16,12 +15,6 @@ interface MeResponse {
 export default function ConsoleLayout() {
   useSchedulerEngine()
   const [user, setUser] = useState({ name: "Staff", email: "", avatar: "" })
-
-  // Task history is persisted in localStorage and shown in the sidebar on every page;
-  // hydrate after mount to avoid an SSR mismatch.
-  useEffect(() => {
-    void useConsoleStore.persist.rehydrate()
-  }, [])
 
   useEffect(() => {
     let cancelled = false

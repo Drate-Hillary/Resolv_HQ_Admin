@@ -183,7 +183,7 @@ export default function SchedulerPage() {
           <p className="min-w-0 flex-1 text-xs/relaxed text-muted-foreground">
             Tasks you schedule call the real agent, one at a time, each as a new task in Chat. They wait while a task is
             awaiting approval{waitingOnApproval ? " (one is waiting now: decide it in Chat)" : ""}. Tasks scheduled here
-            are kept in this browser tab only and are lost on reload; customer tasks and tickets are read from the
+            are saved in this browser and survive a reload (one that was running when you reloaded is marked interrupted); customer tasks and tickets are read from the
             backend.
           </p>
           <Button variant="ghost" size="sm" onClick={clearFinished} disabled={!hasFinished}>

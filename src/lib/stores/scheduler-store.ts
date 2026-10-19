@@ -1,4 +1,5 @@
 import { create } from "zustand"
+import { persist } from "zustand/middleware"
 import { deriveFlow } from "@/lib/agent-flow"
 import { useConsoleStore } from "@/lib/stores/console-store"
 import { apiClient } from "@/backend/api/client"
@@ -83,7 +84,7 @@ function realRoute(): { route: RouteStep[]; finalState: CardState; taskId: strin
   return { route, finalState, taskId: c.currentTaskId }
 }
 
-export const useSchedulerStore = create<SchedulerState>()((set, get) => {
+export const useSchedulerStore = create<SchedulerState>()(persist((set, get) => {
   const patch = (id: string, fn: (c: SchedulerCard) => SchedulerCard) =>
     set((s) => ({ cards: s.cards.map((c) => (c.id === id ? fn(c) : c)) }))
 
@@ -276,4 +277,18 @@ export const useSchedulerStore = create<SchedulerState>()((set, get) => {
       if (due) startLive(due, now)
     },
   }
-})
+}, {
+  name: "resolv-scheduler-board",
+  partialize: (s) => ({ cards: s.cards.slice(-50), dismissed: s.dismissed.slice(-200) }),
+  // A card mid-run when the page closed can never finish; scheduled cards stay queued and still fire.
+  merge: (persisted, current) => {
+    const p = (persisted ?? {}) as Partial<SchedulerState>
+    const now = Date.now()
+    const cards = (p.cards ?? []).map((c): SchedulerCard =>
+      c.state === "running"
+        ? { ...c, state: "failed", column: "done", route: [], finalState: undefined, log: [...c.log, { at: now, column: "done", text: "Interrupted by a page reload" }] }
+        : c
+    )
+    return { ...current, cards, dismissed: p.dismissed ?? [] }
+  },
+}))
