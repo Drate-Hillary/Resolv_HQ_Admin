@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react"
 import { useConsoleStore } from "@/lib/stores/console-store"
 import { AgentWorkingIndicator } from "@/components/console/agent-working-indicator"
+import { OpenRequestLink } from "@/components/console/open-request-link"
 import { Composer } from "@/components/chat/chat-input"
 import { EmptyState } from "@/components/chat/empty-state"
 import { MessageRow } from "@/components/chat/message-bubble"
@@ -16,13 +17,14 @@ const SUGGESTIONS = [
 export function WorkspaceChat() {
   const messages = useConsoleStore((s) => s.messages)
   const status = useConsoleStore((s) => s.status)
+  const requestId = useConsoleStore((s) => s.requestId)
   const runAgent = useConsoleStore((s) => s.runAgent)
   const busy = busyStatuses.includes(status)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" })
-  }, [messages.length, busy])
+  }, [messages.length, busy, requestId])
 
   const send = (text: string) => void runAgent(text)
 
@@ -44,6 +46,11 @@ export function WorkspaceChat() {
             {messages.map((m) => (
               <MessageRow key={m.id} role={m.role === "user" ? "user" : "assistant"} content={m.content} />
             ))}
+            {requestId && !busy && (
+              <div className="ml-10">
+                <OpenRequestLink requestId={requestId} />
+              </div>
+            )}
             {busy && (
               <div className="ml-10">
                 <AgentWorkingIndicator />
