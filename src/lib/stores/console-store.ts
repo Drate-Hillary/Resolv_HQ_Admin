@@ -40,6 +40,8 @@ interface ConsoleState {
   selectedStepKey: string | null
   conversationId: string | null
   approvalId: string | null
+  /** The request filed from the approved escalation, so the console can open it. */
+  requestId: string | null
   error: string | null
   /** When the current run started (ms epoch), for the live elapsed timer. */
   runStartedAt: number | null
@@ -86,6 +88,7 @@ export const useConsoleStore = create<ConsoleState>()(
   selectedStepKey: null,
   conversationId: null,
   approvalId: null,
+  requestId: null,
   error: null,
   runStartedAt: null,
   sessionTokens: 0,
@@ -111,6 +114,7 @@ export const useConsoleStore = create<ConsoleState>()(
       lastRunTokens: null,
       selectedStepKey: null,
       approvalId: null,
+      requestId: null,
       error: null,
       messages: [...get().messages, { id: `local-${uid()}`, role: "user", content: request }],
     })
@@ -202,16 +206,17 @@ export const useConsoleStore = create<ConsoleState>()(
     const { approvalId, status } = get()
     if (status !== "awaiting_approval" || !approvalId) return
     try {
-      await apiClient.patch(`/admin/approvals/${approvalId}/approve`)
+      const { data } = await apiClient.patch<{ requestId?: string | null }>(`/admin/approvals/${approvalId}/approve`)
       set((s) => ({
         status: "completed",
+        requestId: data.requestId ?? null,
         recentTasks: setTaskStatus(s.recentTasks, s.currentTaskId, "completed"),
         run: s.run.map((step) =>
           step.detail?.type === "approval" ? { ...step, status: "done", detail: { ...step.detail, status: "approved" } } : step
         ),
         messages: [
           ...s.messages,
-          { id: `local-${uid()}`, role: "agent", content: "Approved — the escalation ticket has been filed for a human to handle." },
+          { id: `local-${uid()}`, role: "agent", content: data.requestId ? "Approved. The escalation request has been filed for a human to handle; open it to view or act on it." : "Approved. The escalation has been recorded for a human to handle." },
         ],
       }))
     } catch (err) {
@@ -249,6 +254,7 @@ export const useConsoleStore = create<ConsoleState>()(
       selectedStepKey: null,
       conversationId: null,
       approvalId: null,
+      requestId: null,
       currentTaskId: null,
       error: null,
       runStartedAt: null,
@@ -275,6 +281,7 @@ export const useConsoleStore = create<ConsoleState>()(
       conversationId,
       currentTaskId: taskId,
       approvalId: null,
+      requestId: null,
       selectedStepKey: null,
       error: null,
       runStartedAt: null,
@@ -292,6 +299,7 @@ export const useConsoleStore = create<ConsoleState>()(
         conversationId: s.conversationId,
         currentTaskId: s.currentTaskId,
         approvalId: s.approvalId,
+        requestId: s.requestId,
         sessionTokens: s.sessionTokens,
         status: s.status === "thinking" ? "failed" : s.status,
       }),
