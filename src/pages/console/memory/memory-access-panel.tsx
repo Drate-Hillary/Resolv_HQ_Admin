@@ -251,7 +251,7 @@ export function MemoryAccessPanel() {
           </form>
 
           {customers.length > 0 && (
-            <div className="max-h-44 space-y-1 overflow-y-auto rounded-md border border-border p-2">
+            <div className="max-h-44 space-y-1 overflow-y-auto rounded-md bg-muted/50 p-2">
               {customers.map((customer) => (
                 <button
                   key={customer.id}
@@ -278,7 +278,7 @@ export function MemoryAccessPanel() {
                 </div>
                 <p className="text-xs text-muted-foreground">{selectedCustomer.email}</p>
               </div>
-              <label className="flex items-center gap-2 rounded-md border border-border p-3 text-xs text-foreground">
+              <label className="flex items-center gap-2 rounded-md bg-muted/50 p-3 text-xs text-foreground">
                 <input
                   type="checkbox"
                   checked={selectedCustomer.memoryEnabled ?? true}
@@ -335,7 +335,7 @@ function MemoryFactEditor({
   const [enabled, setEnabled] = useState(fact.enabled)
 
   return (
-    <div className="space-y-2 rounded-md border border-border/70 bg-muted/20 p-3">
+    <div className="space-y-2 rounded-md bg-muted/50 p-3">
       <Input value={key} onChange={(event) => setKey(event.target.value)} aria-label="Memory key" maxLength={64} />
       <Input value={value} onChange={(event) => setValue(event.target.value)} aria-label="Memory value" maxLength={2000} />
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -386,7 +386,7 @@ function NewFactForm({
   }
 
   return (
-    <form onSubmit={submit} className="space-y-2 rounded-md border border-dashed border-border p-3">
+    <form onSubmit={submit} className="space-y-2 rounded-md bg-muted/50 p-3">
       <p className="text-xs font-medium text-foreground">Add a memory fact</p>
       <Input value={key} onChange={(event) => setKey(event.target.value)} placeholder="Key" aria-label="New memory key" maxLength={64} />
       <Input value={value} onChange={(event) => setValue(event.target.value)} placeholder="Value" aria-label="New memory value" maxLength={2000} />

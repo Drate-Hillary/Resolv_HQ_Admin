@@ -449,7 +449,7 @@ export function KnowledgeView({
               { doc: "Account Access Troubleshooting Guide", loc: "Page 4 · §2.1 Password reset issues" },
               { doc: "Support Escalation Policy", loc: "Page 2 · §3.0 When to escalate" },
             ].map((s) => (
-              <div key={s.doc} className="flex items-center gap-2 rounded-md border border-border px-2.5 py-2 text-sm">
+              <div key={s.doc} className="flex items-center gap-2 rounded-md bg-muted/50 px-2.5 py-2 text-sm">
                 <Icon icon={CheckmarkCircle02Icon} size={18} className="shrink-0 text-approve" />
                 <span className="font-medium text-foreground">{s.doc}</span>
                 <span className="text-muted-foreground">{s.loc}</span>
@@ -525,7 +525,7 @@ export function KnowledgeView({
 
           <div className="mt-4 flex max-h-64 flex-col gap-1.5 overflow-y-auto">
             {categories.map((c) => (
-              <div key={c.id} className="flex items-center justify-between gap-2 rounded-md border border-border px-2.5 py-1.5">
+              <div key={c.id} className="flex items-center justify-between gap-2 rounded-md bg-muted/50 px-2.5 py-1.5">
                 <span className="text-xs font-medium text-foreground">{c.name}</span>
                 <Button
                   variant="ghost"

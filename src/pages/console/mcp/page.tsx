@@ -13,7 +13,7 @@ export default function McpTesterPage() {
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
           MCP
         </p>
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground">MCP tester</h1>
+        <h1 className="text-lg font-semibold tracking-tight text-foreground">MCP tester</h1>
         <p className="max-w-3xl text-sm text-muted-foreground">
           Call the backend&apos;s MCP endpoint as the signed-in staff member: list the advertised
           tools, run any tool with your own arguments, or run the smoke suite. The suite is
