@@ -10,6 +10,8 @@ export interface TimelineRow {
   iteration: number | null
   provider: string | null
   model: string | null
+  /** The sub-agent that made this call, null when the main agent did. */
+  agent_name?: string | null
   tool_name: string | null
   tool_input: unknown
   detail: string | null
@@ -70,11 +72,13 @@ export function timelineToSteps(rows: TimelineRow[], handoffs: string[] = []): R
         break
       case "model_call": {
         const wantsTools = row.detail?.startsWith("Requested tools:")
-        const label = row.error
-          ? `Plan · model call ${row.iteration} failed`
-          : wantsTools
-            ? `Plan · step ${row.iteration}`
-            : "Respond · drafted answer"
+        const label = row.agent_name
+          ? `Sub-agent ${row.agent_name} · ${row.error ? "model call failed" : wantsTools ? "looked something up" : "wrote its digest"}`
+          : row.error
+            ? `Plan · model call ${row.iteration} failed`
+            : wantsTools
+              ? `Plan · step ${row.iteration}`
+              : "Respond · drafted answer"
         const who = row.provider ? `${row.provider} (${row.model})` : null
         add(key, label, row.error ? "failed" : "done", row.error ?? [who, row.detail].filter(Boolean).join(" — "), {
           latencyMs: row.latency_ms ?? undefined,
@@ -84,6 +88,19 @@ export function timelineToSteps(rows: TimelineRow[], handoffs: string[] = []): R
       }
       case "tool_call": {
         const name = row.tool_name ?? "tool"
+        if (name === "delegate_to_sub_agent") {
+          const target = (row.tool_input as { agent?: string } | null)?.agent ?? "sub-agent"
+          add(key, `Delegate · ${target}`, row.error ? "failed" : "done", row.error ? `${row.error}. ${row.detail ?? ""}`.trim() : row.detail, {
+            latencyMs: row.latency_ms ?? undefined,
+          })
+          break
+        }
+        if (row.agent_name) {
+          add(`${key}-act`, `Sub-agent ${row.agent_name} · ${name}`, row.error ? "failed" : "done", row.error ?? row.detail, {
+            latencyMs: row.latency_ms ?? undefined,
+          })
+          break
+        }
         add(`${key}-act`, `Act · ${name}`, row.error ? "failed" : "done", row.tool_input ? JSON.stringify(row.tool_input) : "no arguments", {
           latencyMs: row.latency_ms ?? undefined,
         })

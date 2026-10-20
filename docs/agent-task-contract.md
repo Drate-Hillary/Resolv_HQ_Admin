@@ -42,6 +42,7 @@ The agent can call only these four. Anything else the model names returns `Unkno
 | Claims of completed actions | Forbidden: refunds, cancellations, account/credential changes, data export/deletion | Prompt rule 2 **and** deterministic `detectBoundaryViolation()` on the output |
 | Malformed tool arguments | Not executed; error returned to the model to retry (consumes an iteration) | `react-agent.ts` (`argumentsParseError`) |
 | Provider failure | Retry with backoff, then next provider, then keyword fallback | `llm/gateway.ts`, `generateAssistantReply()` |
+| Sub-agents (added 20 Oct) | When the retrieved knowledge exceeds `SUB_AGENT_CONTEXT_CHARS` (default 2500; `SUB_AGENTS=on\|off\|auto`), the main agent delegates through one tool, `delegate_to_sub_agent`, to a **researcher** (reads the passages, returns a ≤900-character cited digest) or a **case_checker** (account and unresolved requests, ≤500 characters). Each sub-agent is read-only, limited to its own tools, makes at most 2 model calls (the last without tools), cannot delegate, never sees customer memory, and returns a short error text instead of throwing. At most 4 sub-agent jobs per turn; jobs in one turn run side by side. Their model and tool calls are tagged with the sub-agent's name in the trace (`agent_trace_logs.agent_name`) and counted in the run's tokens. The boundary check still runs on the main agent's final text. | `sub-agents.ts`, `react-agent.ts` |
 
 ## 5. Loop design
 
