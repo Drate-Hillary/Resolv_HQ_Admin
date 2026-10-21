@@ -1,3 +1,5 @@
+import { SparklesIcon } from "@hugeicons/core-free-icons"
+import { Icon } from "@/components/ui/icon"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "cn"
 import { useAdminStore } from "@/lib/stores/admin-store"
@@ -27,8 +29,8 @@ export function TicketList() {
   return (
     <aside className="flex w-full shrink-0 flex-col border-border bg-sidebar text-sidebar-foreground lg:h-screen lg:w-64 lg:border-r">
       <div className="flex h-14 shrink-0 items-center gap-2 border-b border-sidebar-border px-4">
-        <span className="flex size-6 items-center justify-center rounded-md bg-sidebar-primary text-sm font-semibold text-sidebar-primary-foreground">
-          R
+        <span className="flex size-6 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground">
+          <Icon icon={SparklesIcon} size={14} />
         </span>
         <span className="text-sm font-semibold tracking-tight">Approvals</span>
       </div>
