@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Copy01Icon, Tick02Icon } from "@hugeicons/core-free-icons"
+import { Copy01Icon, SparklesIcon, Tick02Icon } from "@hugeicons/core-free-icons"
 import { ReplyText } from "@/components/chat/reply-text"
 import { Icon } from "@/components/ui/icon"
 import type { ChatMessage } from "@/types"
@@ -49,9 +49,9 @@ export function MessageRow({ role, content, timestamp }: MessageRowProps) {
     <motion.div {...enter} className="group/msg flex items-start gap-3">
       <span
         aria-hidden
-        className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full border border-border bg-background text-xs font-semibold text-foreground"
+        className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
       >
-        R
+        <Icon icon={SparklesIcon} size={15} />
       </span>
       <div className="min-w-0 flex-1">
         <ReplyText content={content} className="text-[0.9375rem]/7 text-foreground" />
