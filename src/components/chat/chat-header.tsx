@@ -1,4 +1,4 @@
-import { Add01Icon } from "@hugeicons/core-free-icons"
+import { Add01Icon, SparklesIcon } from "@hugeicons/core-free-icons"
 import { Icon } from "@/components/ui/icon"
 import { useChatStore } from "@/lib/stores/chat-store"
 import { MemoryDialog } from "@/components/chat/memory-dialog"
@@ -41,11 +41,11 @@ function Brand() {
     <div className="flex items-center gap-2">
       <span
         aria-hidden
-        className="flex size-7 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground"
+        className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground"
       >
-        R
+        <Icon icon={SparklesIcon} size={18} />
       </span>
-      <span className="text-sm font-semibold tracking-tight text-foreground">Resolv-HQ</span>
+      <span className="text-base font-bold tracking-tight text-foreground">Resolv-HQ</span>
     </div>
   )
 }

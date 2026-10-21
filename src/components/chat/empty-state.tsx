@@ -1,3 +1,6 @@
+import { SparklesIcon } from "@hugeicons/core-free-icons"
+import { Icon } from "@/components/ui/icon"
+
 interface EmptyStateProps {
   title: string
   subtitle?: string
@@ -12,9 +15,9 @@ export function EmptyState({ title, subtitle, suggestions, onPick, disabled }: E
     <div className="flex flex-col items-center px-2 text-center">
       <span
         aria-hidden
-        className="flex size-11 items-center justify-center rounded-full bg-primary text-base font-semibold text-primary-foreground"
+        className="flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground"
       >
-        R
+        <Icon icon={SparklesIcon} size={22} />
       </span>
       <h1 className="mt-5 text-2xl font-semibold tracking-tight text-balance text-foreground sm:text-3xl">
         {title}
