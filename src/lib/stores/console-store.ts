@@ -6,7 +6,13 @@ import { toastError } from "@/lib/errors"
 import { isProviderFailureMessage, summarizeProviderFailures } from "@/lib/provider-errors"
 import { onRealtimeEvent, retainRealtime } from "@/lib/realtime"
 import { timelineToSteps, type TimelineRow } from "@/lib/run-timeline"
-import type { AgentStatus, RecentTask, RunStep, WorkspaceMessage } from "@/types/console"
+import type { AgentStatus, RecentTask, RunStep } from "@/types/console"
+
+interface WorkspaceMessage {
+  id: string
+  role: "user" | "agent"
+  content: string
+}
 
 interface EscalationPayload {
   approvalId: string
@@ -314,15 +320,3 @@ export const useConsoleStore = create<ConsoleState>()(
     }
   )
 )
-
-// Keep the open task's transcript on its Recent tasks entry so clicking it later restores the chat.
-useConsoleStore.subscribe((s) => {
-  if (!s.currentTaskId || s.status === "thinking") return
-  const task = s.recentTasks.find((t) => t.id === s.currentTaskId)
-  if (!task || (task.messages === s.messages && task.run === s.run && task.conversationId === s.conversationId)) return
-  useConsoleStore.setState({
-    recentTasks: s.recentTasks.map((t) =>
-      t.id === task.id ? { ...t, messages: s.messages, run: s.run, conversationId: s.conversationId } : t
-    ),
-  })
-})

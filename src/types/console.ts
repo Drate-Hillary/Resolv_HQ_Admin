@@ -5,21 +5,11 @@
 
 export type AgentStatus = "ready" | "thinking" | "awaiting_approval" | "completed" | "failed"
 
-export interface WorkspaceMessage {
-  id: string
-  role: "user" | "agent"
-  content: string
-}
-
 export interface RecentTask {
   id: string
   request: string
   status: AgentStatus
   startedAt: number
-  /** Kept up to date while the task is open, so clicking it can put the chat back. */
-  conversationId?: string | null
-  messages?: WorkspaceMessage[]
-  run?: RunStep[]
 }
 
 export type RunStepStatus = "pending" | "active" | "done" | "blocked" | "failed"
