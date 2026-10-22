@@ -21,6 +21,7 @@
     "class-variance-authority": "^0.7.1",
     "cn": "^0.2.6",
     "framer-motion": "^13.2.0",
+    "mammoth": "^1.13.0",
     "openai": "^7.23.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",

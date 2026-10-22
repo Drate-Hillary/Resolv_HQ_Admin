@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Icon } from "@/components/ui/icon"
 import { Input } from "@/components/ui/input"
+import { DocxViewer } from "@/components/ui/docx-viewer"
 import { PdfViewer } from "@/components/ui/pdf-viewer"
 import { Progress } from "@/components/ui/progress"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
@@ -116,9 +117,13 @@ export function KnowledgeView({
 
   // Fetch a short-lived signed URL for the open document so a PDF can be read in the sheet.
   const selectedIsPdf = Boolean(selected?.file_url) && (selected?.file_type === "application/pdf" || /\.pdf$/i.test(selected?.file_url ?? ""))
+  const selectedIsDocx =
+    Boolean(selected?.file_url) &&
+    (selected?.file_type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || /\.docx$/i.test(selected?.file_url ?? ""))
+  const selectedPreviewable = selectedIsPdf || selectedIsDocx
   const selectedId = selected?.id
   useEffect(() => {
-    if (!selectedId || !selectedIsPdf) return
+    if (!selectedId || !selectedPreviewable) return
     let cancelled = false
     apiClient
       .get<{ url: string }>(`/admin/knowledge/${selectedId}/download`)
@@ -127,7 +132,7 @@ export function KnowledgeView({
     return () => {
       cancelled = true
     }
-  }, [selectedId, selectedIsPdf])
+  }, [selectedId, selectedPreviewable])
 
   function triggerUpload() {
     fileInputRef.current?.click()
@@ -477,7 +482,7 @@ export function KnowledgeView({
       </div>
 
       <Sheet open={Boolean(selected)} onOpenChange={(open) => !open && setSelected(null)}>
-        <SheetContent className={selectedIsPdf ? "sm:max-w-2xl" : undefined}>
+        <SheetContent className={selectedPreviewable ? "sm:max-w-2xl" : undefined}>
           {selected && (
             <>
               <SheetHeader>
@@ -493,10 +498,12 @@ export function KnowledgeView({
                 />
                 {selected.content && <DetailRow label="Content" value={selected.content.slice(0, 300)} />}
               </div>
-              {selectedIsPdf && (
+              {selectedPreviewable && (
                 <div className="flex min-h-0 flex-1 flex-col px-6 pb-6">
                   {previewUrl?.id !== selected.id ? (
                     <p className="py-6 text-center text-muted-foreground">Preparing preview…</p>
+                  ) : previewUrl.url && selectedIsDocx ? (
+                    <DocxViewer url={previewUrl.url} className="min-h-0 flex-1 rounded-md border border-border" />
                   ) : previewUrl.url ? (
                     <PdfViewer url={previewUrl.url} className="min-h-0 flex-1 overflow-hidden rounded-md border border-border" />
                   ) : (
