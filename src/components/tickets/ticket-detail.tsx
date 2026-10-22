@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { AttachmentList } from "@/components/ui/attachment-list"
 import { useRequestsStore } from "@/lib/stores/requests-store"
 import type { RequestPriority } from "@/types"
 
@@ -152,7 +153,8 @@ export function TicketDetail({ id }: { id: string }) {
           {ticket.messages.map((message) => (
             <li key={message.id} className="rounded-md bg-accent/40 px-3 py-2">
               <p className="text-sm font-medium text-foreground capitalize">{message.sender}</p>
-              <p className="mt-0.5 text-sm/relaxed text-foreground">{message.text}</p>
+              {message.text && <p className="mt-0.5 text-sm/relaxed text-foreground">{message.text}</p>}
+              {message.attachments && message.attachments.length > 0 && <AttachmentList attachments={message.attachments} />}
               <p className="mt-1 text-xs text-muted-foreground">{new Date(message.timestamp).toLocaleString()}</p>
             </li>
           ))}
