@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react"
 import { ArrowUp02Icon } from "@hugeicons/core-free-icons"
 import { cn } from "cn"
+import { AttachDocument } from "@/components/console/attach-document"
 import { Icon } from "@/components/ui/icon"
 import { useChatStore } from "@/lib/stores/chat-store"
 
@@ -87,5 +88,12 @@ export function Composer({
 export function ChatInput() {
   const isLoading = useChatStore((s) => s.isLoading)
   const sendMessage = useChatStore((s) => s.sendMessage)
-  return <Composer onSend={(text) => void sendMessage(text)} busy={isLoading} />
+  const addDocumentSummary = useChatStore((s) => s.addDocumentSummary)
+  return (
+    <Composer
+      onSend={(text) => void sendMessage(text)}
+      busy={isLoading}
+      leading={<AttachDocument disabled={isLoading} onSummary={addDocumentSummary} />}
+    />
+  )
 }
