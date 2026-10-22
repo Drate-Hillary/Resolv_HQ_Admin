@@ -23,7 +23,7 @@ interface Job {
 
 const ACCEPT: Record<Mode, string> = {
   knowledge: ".pdf,.doc,.docx,.txt,.md,.csv",
-  summarize: ".pdf,.txt,.md,.csv",
+  summarize: ".pdf,.docx,.txt,.md,.csv",
 }
 
 /** Paperclip in the composer: a popover to either add a document to the knowledge base or have the agent summarise it. */
