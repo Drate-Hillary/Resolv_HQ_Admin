@@ -117,6 +117,9 @@ export interface CardMessage {
 
 export const STEP_MS = 1600
 
+/** Finished tasks leave the scheduler this long after they ended. */
+export const TASK_TTL_MS = 48 * 60 * 60 * 1000
+
 /** A customer-app agent task as a board card: its column and path are what the backend recorded. */
 export function taskToCard(t: RemoteTask): SchedulerCard {
   const started = t.startedAt ? Date.parse(t.startedAt) : Date.now()

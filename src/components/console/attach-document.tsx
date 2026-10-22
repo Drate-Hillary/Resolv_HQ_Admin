@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Icon } from "@/components/ui/icon"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Progress } from "@/components/ui/progress"
+import { useCallerRole } from "@/hooks/use-caller-role"
 import { useConsoleStore } from "@/lib/stores/console-store"
 
 type Mode = "knowledge" | "summarize"
@@ -26,13 +27,24 @@ const ACCEPT: Record<Mode, string> = {
 }
 
 /** Paperclip in the composer: a popover to either add a document to the knowledge base or have the agent summarise it. */
-export function AttachDocument({ disabled }: { disabled?: boolean }) {
+export function AttachDocument({
+  disabled,
+  onSummary,
+}: {
+  disabled?: boolean
+  /** Where the summary goes; defaults to the console workspace chat. */
+  onSummary?: (fileName: string, summary: string) => void
+}) {
+  // Only staff can add to the knowledge base; anyone (customers too) can have a document summarised.
+  const role = useCallerRole()
+  const canAddToKnowledge = role === "admin" || role === "agent"
   const inputRef = useRef<HTMLInputElement>(null)
   const modeRef = useRef<Mode>("knowledge")
   const [open, setOpen] = useState(false)
   const [job, setJob] = useState<Job | null>(null)
   const providerId = useConsoleStore((s) => s.selectedProviderId)
-  const addDocumentSummary = useConsoleStore((s) => s.addDocumentSummary)
+  const addConsoleSummary = useConsoleStore((s) => s.addDocumentSummary)
+  const addDocumentSummary = onSummary ?? addConsoleSummary
 
   const choose = (mode: Mode) => {
     modeRef.current = mode
@@ -46,7 +58,7 @@ export function AttachDocument({ disabled }: { disabled?: boolean }) {
     const file = e.target.files?.[0]
     e.target.value = ""
     if (!file) return
-    const mode = modeRef.current
+    const mode = canAddToKnowledge ? modeRef.current : "summarize"
 
     setJob({ mode, name: file.name, progress: 0, processing: false })
     const onUploadProgress = (event: { loaded: number; total?: number }) => {
@@ -63,7 +75,7 @@ export function AttachDocument({ disabled }: { disabled?: boolean }) {
           description: "It is being indexed and will show as published shortly.",
         })
       } else {
-        if (providerId) form.append("providerId", providerId)
+        if (providerId && canAddToKnowledge) form.append("providerId", providerId)
         const { data } = await apiClient.post<{ summary: string; truncated: boolean }>("/chat/summarize-document", form, {
           onUploadProgress,
           timeout: 120_000,
@@ -121,12 +133,14 @@ export function AttachDocument({ disabled }: { disabled?: boolean }) {
             </div>
           ) : (
             <div className="flex flex-col gap-0.5">
-              <Option
-                icon={BookOpen01Icon}
-                title="Add to knowledge base"
-                hint="The agent can cite it in future answers"
-                onClick={() => choose("knowledge")}
-              />
+              {canAddToKnowledge && (
+                <Option
+                  icon={BookOpen01Icon}
+                  title="Add to knowledge base"
+                  hint="The agent can cite it in future answers"
+                  onClick={() => choose("knowledge")}
+                />
+              )}
               <Option
                 icon={SparklesIcon}
                 title="Summarise for me"

@@ -15,6 +15,8 @@ interface ChatState {
   updateMemoryFactValue: (id: string, value: string) => void
   getMemoryContext: () => string
   sendMessage: (content: string) => Promise<void>
+  /** Show a document summary in the chat as a request plus the assistant's answer. */
+  addDocumentSummary: (fileName: string, summary: string) => void
   /** Start a fresh conversation; the next message opens a new backend conversation. */
   newChat: () => void
 }
@@ -137,6 +139,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
     if (get().isLoading) return
     set({ conversationId: null, stream: [] })
   },
+
+  addDocumentSummary: (fileName, summary) =>
+    set((s) => ({
+      stream: [
+        ...s.stream,
+        { type: "message", id: `local-${nextId++}`, role: "user", content: `Summarise the document “${fileName}”`, timestamp: timestamp() },
+        { type: "message", id: `local-${nextId++}`, role: "assistant", content: summary, timestamp: timestamp() },
+      ],
+    })),
 
   sendMessage: async (content) => {
     if (!content.trim() || get().isLoading) return
