@@ -5,6 +5,7 @@ import { useConsoleStore } from "@/lib/stores/console-store"
 import { apiClient } from "@/backend/api/client"
 import {
   STEP_MS,
+  TASK_TTL_MS,
   toColumn,
   type CardState,
   type RouteStep,
@@ -229,6 +230,17 @@ export const useSchedulerStore = create<SchedulerState>()(persist((set, get) => 
     },
 
     tick: (now) => {
+      // 0. Auto-remove: a finished task goes 48 hours after it ended, along with its Chat task(s).
+      const expiredCards = get().cards.filter((c) => isFinished(c.state) && now - (c.log.at(-1)?.at ?? c.createdAt) > TASK_TTL_MS)
+      if (expiredCards.length > 0) {
+        for (const card of expiredCards) get().removeCard(card.id)
+      }
+      const chat = useConsoleStore.getState()
+      for (const task of chat.recentTasks) {
+        const ended = task.status === "completed" || task.status === "failed"
+        if (ended && task.id !== chat.currentTaskId && now - task.startedAt > TASK_TTL_MS) chat.deleteTask(task.id)
+      }
+
       const { cards } = get()
       if (cards.length === 0) return
 

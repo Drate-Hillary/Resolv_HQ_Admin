@@ -178,6 +178,24 @@ export const useRequestsStore = create<RequestsState>((set, get) => ({
               typingByRequest: without(s.typingByRequest, event.requestId),
             }
           })
+        } else if (event.type === "attachment") {
+          set((s) => {
+            const detail = s.detailById[event.requestId]
+            if (!detail || !event.messageId) return s
+            return {
+              detailById: {
+                ...s.detailById,
+                [event.requestId]: {
+                  ...detail,
+                  messages: detail.messages.map((m) =>
+                    m.id === event.messageId && !m.attachments?.some((a) => a.id === event.attachment.id)
+                      ? { ...m, attachments: [...(m.attachments ?? []), event.attachment] }
+                      : m
+                  ),
+                },
+              },
+            }
+          })
         } else if (event.type === "typing") {
           if (event.userId === myUserId) return
           clearTimeout(typingTimers[event.requestId])

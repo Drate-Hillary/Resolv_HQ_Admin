@@ -3,6 +3,8 @@ import { useConsoleStore } from "@/lib/stores/console-store"
 import { AgentWorkingIndicator } from "@/components/console/agent-working-indicator"
 import { OpenRequestLink } from "@/components/console/open-request-link"
 import { Composer } from "@/components/chat/chat-input"
+import { AttachDocument } from "@/components/console/attach-document"
+import { ModelPicker } from "@/components/console/model-picker"
 import { EmptyState } from "@/components/chat/empty-state"
 import { MessageRow } from "@/components/chat/message-bubble"
 
@@ -66,6 +68,8 @@ export function WorkspaceChat() {
             onSend={send}
             busy={busy}
             placeholder="Ask the agent…"
+            leading={<AttachDocument disabled={busy} />}
+            trailing={<ModelPicker disabled={busy} />}
             footnote="Resolv-HQ can make mistakes. Check the activity panel for what it actually did."
           />
         </div>

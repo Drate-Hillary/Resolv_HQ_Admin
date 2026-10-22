@@ -1,12 +1,13 @@
 import { createClient as createBrowserSupabaseClient } from "@/backend/supabase/client"
 import type { AppNotification } from "@/lib/stores/notifications-store"
-import type { TicketMessage } from "@/types"
+import type { TicketAttachment, TicketMessage } from "@/types"
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3001"
 
 export type RealtimeEvent =
   | { type: "notification"; notification: AppNotification }
   | { type: "message"; requestId: string; message: TicketMessage }
+  | { type: "attachment"; requestId: string; messageId: string | null; attachment: TicketAttachment }
   | { type: "scheduler"; topic: string; event: unknown }
   | { type: "usage"; conversationId: string; inputTokens: number; outputTokens: number }
   | { type: "typing"; requestId: string; userId: string; senderType: "customer" | "admin" | "agent"; typing: boolean }
