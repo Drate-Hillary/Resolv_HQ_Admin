@@ -79,8 +79,19 @@ export type EscalationDecision = "approved" | "rejected" | "editing"
 // agent_approvals rows awaiting an approve/reject decision.
 // ---------------------------------------------------------------------
 
+/** A file on a request. `fileUrl` is a short-lived signed URL. */
+export interface TicketAttachment {
+  id: string
+  fileUrl: string
+  fileName: string
+  fileType: string | null
+  fileSizeBytes: number | null
+  messageId?: string | null
+}
+
 export interface TicketMessage {
   id: string
+  attachments?: TicketAttachment[]
   sender: "customer" | "admin" | "agent" | "assistant" | "system"
   text: string
   timestamp: string
