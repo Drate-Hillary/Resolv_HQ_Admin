@@ -1,10 +1,11 @@
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import { getErrorMessage } from "@/lib/errors"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Icon } from "@/components/ui/icon"
 import { Input } from "@/components/ui/input"
+import { PdfViewer } from "@/components/ui/pdf-viewer"
 import { Progress } from "@/components/ui/progress"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
 import {
@@ -96,6 +97,7 @@ export function KnowledgeView({
   const [uploadingFile, setUploadingFile] = useState<{ name: string; progress: number } | null>(null)
   const [uploadCategoryId, setUploadCategoryId] = useState<string>(UNCATEGORIZED)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [previewUrl, setPreviewUrl] = useState<{ id: string; url: string | null } | null>(null)
 
   const [manageOpen, setManageOpen] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState("")
@@ -111,6 +113,21 @@ export function KnowledgeView({
       (categoryFilter === UNCATEGORIZED ? !d.category_id : d.category_id === categoryFilter)
     return matchesQuery && matchesCategory
   })
+
+  // Fetch a short-lived signed URL for the open document so a PDF can be read in the sheet.
+  const selectedIsPdf = Boolean(selected?.file_url) && (selected?.file_type === "application/pdf" || /\.pdf$/i.test(selected?.file_url ?? ""))
+  const selectedId = selected?.id
+  useEffect(() => {
+    if (!selectedId || !selectedIsPdf) return
+    let cancelled = false
+    apiClient
+      .get<{ url: string }>(`/admin/knowledge/${selectedId}/download`)
+      .then(({ data }) => !cancelled && setPreviewUrl({ id: selectedId, url: data.url }))
+      .catch(() => !cancelled && setPreviewUrl({ id: selectedId, url: null }))
+    return () => {
+      cancelled = true
+    }
+  }, [selectedId, selectedIsPdf])
 
   function triggerUpload() {
     fileInputRef.current?.click()
@@ -460,7 +477,7 @@ export function KnowledgeView({
       </div>
 
       <Sheet open={Boolean(selected)} onOpenChange={(open) => !open && setSelected(null)}>
-        <SheetContent>
+        <SheetContent className={selectedIsPdf ? "sm:max-w-2xl" : undefined}>
           {selected && (
             <>
               <SheetHeader>
@@ -476,6 +493,17 @@ export function KnowledgeView({
                 />
                 {selected.content && <DetailRow label="Content" value={selected.content.slice(0, 300)} />}
               </div>
+              {selectedIsPdf && (
+                <div className="flex min-h-0 flex-1 flex-col px-6 pb-6">
+                  {previewUrl?.id !== selected.id ? (
+                    <p className="py-6 text-center text-muted-foreground">Preparing preview…</p>
+                  ) : previewUrl.url ? (
+                    <PdfViewer url={previewUrl.url} className="min-h-0 flex-1 overflow-hidden rounded-md border border-border" />
+                  ) : (
+                    <p className="py-6 text-center text-muted-foreground">The preview could not be loaded. Try Download instead.</p>
+                  )}
+                </div>
+              )}
             </>
           )}
         </SheetContent>
