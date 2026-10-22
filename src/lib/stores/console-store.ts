@@ -47,6 +47,11 @@ interface ConsoleState {
   liveTokens: number
   /** Tokens the most recent run used, null until a run has finished. */
   lastRunTokens: { input: number; output: number } | null
+  /** The agent_providers row an admin picked for the agent to use; null lets the backend choose. */
+  selectedProviderId: string | null
+  setSelectedProvider: (id: string | null) => void
+  /** Show a document summary in the chat as a user request plus the agent's answer. */
+  addDocumentSummary: (fileName: string, summary: string) => void
   runAgent: (request: string) => Promise<void>
   selectStep: (key: string | null) => void
   approve: () => Promise<void>
@@ -90,8 +95,20 @@ export const useConsoleStore = create<ConsoleState>()(
   sessionTokens: 0,
   liveTokens: 0,
   lastRunTokens: null,
+  selectedProviderId: null,
 
   selectStep: (key) => set({ selectedStepKey: key }),
+
+  setSelectedProvider: (id) => set({ selectedProviderId: id }),
+
+  addDocumentSummary: (fileName, summary) =>
+    set((s) => ({
+      messages: [
+        ...s.messages,
+        { id: `local-${uid()}`, role: "user", content: `Summarise the document “${fileName}”` },
+        { id: `local-${uid()}`, role: "agent", content: summary },
+      ],
+    })),
 
   runAgent: async (request) => {
     if (get().status === "thinking") return
@@ -136,6 +153,7 @@ export const useConsoleStore = create<ConsoleState>()(
 
       const { data } = await apiClient.post<ChatMessageResponse>(`/chat/conversations/${conversationId}/messages`, {
         content: request,
+        ...(get().selectedProviderId ? { providerId: get().selectedProviderId } : {}),
       })
 
       // Prefer the backend trace (real order, latency, tokens); a turn that never
@@ -302,6 +320,7 @@ export const useConsoleStore = create<ConsoleState>()(
         approvalId: s.approvalId,
         requestId: s.requestId,
         sessionTokens: s.sessionTokens,
+        selectedProviderId: s.selectedProviderId,
         status: s.status === "thinking" ? "failed" : s.status,
       }),
       // A task that was mid-flight when the page closed can never finish.
