@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 882 931" width="882" height="931" font-family="Arial, Helvetica, sans-serif">
+<defs><marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#222"/></marker><marker id="o" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="none" stroke="#222"/></marker></defs>
+<rect width="882" height="931" fill="white"/>
+<line x1="40" y1="611" x2="836" y2="611" stroke="#666" stroke-dasharray="5 4"/>
+<text x="44" y="624" font-size="11" font-style="italic" fill="#333">[final answer]</text>
+<rect x="32" y="469" width="812" height="187" fill="none" stroke="#666"/>
+<rect x="32" y="469" width="176.0" height="20" fill="#f0f0f0" stroke="#666"/>
+<text x="38" y="483" font-size="11" font-weight="bold" fill="#222">alt [tool call requested]</text>
+<rect x="24" y="253" width="828" height="403" fill="none" stroke="#666"/>
+<rect x="24" y="253" width="176.0" height="20" fill="#f0f0f0" stroke="#666"/>
+<text x="30" y="267" font-size="11" font-weight="bold" fill="#222">loop [up to 4 iterations]</text>
+<rect x="24" y="652" width="828" height="173" fill="none" stroke="#666"/>
+<rect x="24" y="652" width="169.60000000000002" height="20" fill="#f0f0f0" stroke="#666"/>
+<text x="30" y="666" font-size="11" font-weight="bold" fill="#222">opt [escalation drafted]</text>
+<line x1="74" y1="60" x2="74" y2="911" stroke="#888" stroke-dasharray="4 4"/>
+<rect x="30" y="20" width="88" height="40" rx="4" fill="#dae8fc" stroke="#6c8ebf"/>
+<text x="74" y="44.0" font-size="11" font-weight="bold" text-anchor="middle" fill="#222">Customer (app)</text>
+<line x1="178" y1="60" x2="178" y2="911" stroke="#888" stroke-dasharray="4 4"/>
+<rect x="134" y="20" width="88" height="40" rx="4" fill="#dae8fc" stroke="#6c8ebf"/>
+<text x="178" y="44.0" font-size="11" font-weight="bold" text-anchor="middle" fill="#222">Express API</text>
+<line x1="282" y1="60" x2="282" y2="911" stroke="#888" stroke-dasharray="4 4"/>
+<rect x="238" y="20" width="88" height="40" rx="4" fill="#dae8fc" stroke="#6c8ebf"/>
+<text x="282" y="44.0" font-size="11" font-weight="bold" text-anchor="middle" fill="#222">LLM gateway</text>
+<line x1="386" y1="60" x2="386" y2="911" stroke="#888" stroke-dasharray="4 4"/>
+<rect x="342" y="20" width="88" height="40" rx="4" fill="#dae8fc" stroke="#6c8ebf"/>
+<text x="386" y="44.0" font-size="11" font-weight="bold" text-anchor="middle" fill="#222">Model provider</text>
+<line x1="490" y1="60" x2="490" y2="911" stroke="#888" stroke-dasharray="4 4"/>
+<rect x="446" y="20" width="88" height="40" rx="4" fill="#dae8fc" stroke="#6c8ebf"/>
+<text x="490" y="44.0" font-size="11" font-weight="bold" text-anchor="middle" fill="#222">ReAct loop</text>
+<line x1="594" y1="60" x2="594" y2="911" stroke="#888" stroke-dasharray="4 4"/>
+<rect x="550" y="20" width="88" height="40" rx="4" fill="#dae8fc" stroke="#6c8ebf"/>
+<text x="594" y="44.0" font-size="11" font-weight="bold" text-anchor="middle" fill="#222">Agent tools</text>
+<line x1="698" y1="60" x2="698" y2="911" stroke="#888" stroke-dasharray="4 4"/>
+<rect x="654" y="20" width="88" height="40" rx="4" fill="#dae8fc" stroke="#6c8ebf"/>
+<text x="698" y="44.0" font-size="11" font-weight="bold" text-anchor="middle" fill="#222">Postgres</text>
+<line x1="802" y1="60" x2="802" y2="911" stroke="#888" stroke-dasharray="4 4"/>
+<rect x="758" y="20" width="88" height="40" rx="4" fill="#dae8fc" stroke="#6c8ebf"/>
+<text x="802" y="44.0" font-size="11" font-weight="bold" text-anchor="middle" fill="#222">Staff (console)</text>
+<line x1="74" y1="100" x2="176" y2="100" stroke="#222" marker-end="url(#a)"/>
+<text x="126.0" y="95" font-size="10.5" text-anchor="middle" fill="#222" stroke="white" stroke-width="3" paint-order="stroke">1. message + model choice</text>
+<polyline points="178,131 223,131 223,153 180,153" fill="none" stroke="#222" marker-end="url(#a)"/>
+<text x="230" y="146" font-size="10.5" fill="#222">2. auth, rate limit, boundary</text>
+<line x1="178" y1="178" x2="696" y2="178" stroke="#222" marker-end="url(#a)"/>
+<text x="438.0" y="173" font-size="10.5" text-anchor="middle" fill="#222" stroke="white" stroke-width="3" paint-order="stroke">3. load scoped context</text>
+<line x1="698" y1="209" x2="180" y2="209" stroke="#222" stroke-dasharray="6 4" marker-end="url(#o)"/>
+<text x="438.0" y="204" font-size="10.5" text-anchor="middle" fill="#222" stroke="white" stroke-width="3" paint-order="stroke">4. context</text>
+<line x1="178" y1="240" x2="488" y2="240" stroke="#222" marker-end="url(#a)"/>
+<text x="334.0" y="235" font-size="10.5" text-anchor="middle" fill="#222" stroke="white" stroke-width="3" paint-order="stroke">5. run ReAct loop</text>
+<line x1="490" y1="285" x2="284" y2="285" stroke="#222" marker-end="url(#a)"/>
+<text x="386.0" y="280" font-size="10.5" text-anchor="middle" fill="#222" stroke="white" stroke-width="3" paint-order="stroke">6. complete(messages, tools)</text>
+<polyline points="282,316 327,316 327,338 284,338" fill="none" stroke="#222" marker-end="url(#a)"/>
+<text x="334" y="331" font-size="10.5" fill="#222">7. skip parked, check cache</text>
+<line x1="282" y1="363" x2="384" y2="363" stroke="#222" marker-end="url(#a)"/>
+<text x="334.0" y="358" font-size="10.5" text-anchor="middle" fill="#222" stroke="white" stroke-width="3" paint-order="stroke">8. call model (retry, fall back)</text>
+<line x1="386" y1="394" x2="284" y2="394" stroke="#222" stroke-dasharray="6 4" marker-end="url(#o)"/>
+<text x="334.0" y="389" font-size="10.5" text-anchor="middle" fill="#222" stroke="white" stroke-width="3" paint-order="stroke">9. text or tool call</text>
+<line x1="282" y1="425" x2="488" y2="425" stroke="#222" stroke-dasharray="6 4" marker-end="url(#o)"/>
+<text x="386.0" y="420" font-size="10.5" text-anchor="middle" fill="#222" stroke="white" stroke-width="3" paint-order="stroke">10. result</text>
+<line x1="490" y1="456" x2="696" y2="456" stroke="#222" marker-end="url(#a)"/>
+<text x="594.0" y="451" font-size="10.5" text-anchor="middle" fill="#222" stroke="white" stroke-width="3" paint-order="stroke">11. trace row (model call)</text>
+<line x1="490" y1="501" x2="592" y2="501" stroke="#222" marker-end="url(#a)"/>
+<text x="542.0" y="496" font-size="10.5" text-anchor="middle" fill="#222" stroke="white" stroke-width="3" paint-order="stroke">12. validate args, run</text>
+<line x1="594" y1="532" x2="696" y2="532" stroke="#222" marker-end="url(#a)"/>
+<text x="646.0" y="527" font-size="10.5" text-anchor="middle" fill="#222" stroke="white" stroke-width="3" paint-order="stroke">13. read data / draft</text>
+<line x1="594" y1="563" x2="492" y2="563" stroke="#222" stroke-dasharray="6 4" marker-end="url(#o)"/>
+<text x="542.0" y="558" font-size="10.5" text-anchor="middle" fill="#222" stroke="white" stroke-width="3" paint-order="stroke">14. observation</text>
+<line x1="490" y1="594" x2="696" y2="594" stroke="#222" marker-end="url(#a)"/>
+<text x="594.0" y="589" font-size="10.5" text-anchor="middle" fill="#222" stroke="white" stroke-width="3" paint-order="stroke">15. trace row (tool call)</text>
+<line x1="490" y1="639" x2="180" y2="639" stroke="#222" stroke-dasharray="6 4" marker-end="url(#o)"/>
+<text x="334.0" y="634" font-size="10.5" text-anchor="middle" fill="#222" stroke="white" stroke-width="3" paint-order="stroke">16. answer + sources</text>
+<line x1="490" y1="684" x2="696" y2="684" stroke="#222" marker-end="url(#a)"/>
+<text x="594.0" y="679" font-size="10.5" text-anchor="middle" fill="#222" stroke="white" stroke-width="3" paint-order="stroke">17. insert pending approval</text>
+<line x1="178" y1="715" x2="800" y2="715" stroke="#222" marker-end="url(#a)"/>
+<text x="490.0" y="710" font-size="10.5" text-anchor="middle" fill="#222" stroke="white" stroke-width="3" paint-order="stroke">18. push approval event</text>
+<line x1="802" y1="746" x2="180" y2="746" stroke="#222" marker-end="url(#a)"/>
+<text x="490.0" y="741" font-size="10.5" text-anchor="middle" fill="#222" stroke="white" stroke-width="3" paint-order="stroke">19. approve or reject</text>
+<line x1="178" y1="777" x2="696" y2="777" stroke="#222" marker-end="url(#a)"/>
+<text x="438.0" y="772" font-size="10.5" text-anchor="middle" fill="#222" stroke="white" stroke-width="3" paint-order="stroke">20. update approval, notify</text>
+<line x1="178" y1="808" x2="76" y2="808" stroke="#222" stroke-dasharray="6 4" marker-end="url(#o)"/>
+<text x="126.0" y="803" font-size="10.5" text-anchor="middle" fill="#222" stroke="white" stroke-width="3" paint-order="stroke">21. push outcome</text>
+<line x1="178" y1="839" x2="696" y2="839" stroke="#222" marker-end="url(#a)"/>
+<text x="438.0" y="834" font-size="10.5" text-anchor="middle" fill="#222" stroke="white" stroke-width="3" paint-order="stroke">22. save messages, finish run</text>
+<line x1="178" y1="870" x2="76" y2="870" stroke="#222" stroke-dasharray="6 4" marker-end="url(#o)"/>
+<text x="126.0" y="865" font-size="10.5" text-anchor="middle" fill="#222" stroke="white" stroke-width="3" paint-order="stroke">23. reply with sources</text>
+</svg>
