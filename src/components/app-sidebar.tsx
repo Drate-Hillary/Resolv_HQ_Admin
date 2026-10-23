@@ -34,6 +34,7 @@ import {
   BubbleChatAddIcon,
   ArrowRight01Icon,
   WorkflowSquare01Icon,
+  Book02Icon,
 } from "@hugeicons/core-free-icons"
 
 const consolePages = [
@@ -47,6 +48,7 @@ const consolePages = [
   { title: "Memory & MCP", url: "/memory", icon: <HugeiconsIcon icon={AiBrain01Icon} strokeWidth={2} /> },
   { title: "MCP Tester", url: "/mcp", icon: <HugeiconsIcon icon={PlugSocketIcon} strokeWidth={2} /> },
   { title: "Architecture", url: "/architecture", icon: <HugeiconsIcon icon={WorkflowSquare01Icon} strokeWidth={2} /> },
+  { title: "Documentation", url: "/documentation", icon: <HugeiconsIcon icon={Book02Icon} strokeWidth={2} /> },
 ]
 
 /** Every admin page, tucked under one collapsible group; open when you are on one of them. */
