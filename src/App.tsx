@@ -17,6 +17,7 @@ import ProvidersPage from "@/pages/console/providers/page"
 import MemoryMcpPage from "@/pages/console/memory/page"
 import McpTesterPage from "@/pages/console/mcp/page"
 import ArchitecturePage from "@/pages/console/architecture/page"
+import DocumentationPage from "@/pages/console/documentation/page"
 
 export default function App() {
   return (
@@ -42,6 +43,7 @@ export default function App() {
             <Route path="/memory" element={<MemoryMcpPage />} />
             <Route path="/mcp" element={<McpTesterPage />} />
             <Route path="/architecture" element={<ArchitecturePage />} />
+            <Route path="/documentation" element={<DocumentationPage />} />
           </Route>
         </Route>
 

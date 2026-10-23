@@ -75,7 +75,7 @@ export function AttachDocument({
           description: "It is being indexed and will show as published shortly.",
         })
       } else {
-        if (providerId && canAddToKnowledge) form.append("providerId", providerId)
+        if (providerId) form.append("providerId", providerId)
         const { data } = await apiClient.post<{ summary: string; truncated: boolean }>("/chat/summarize-document", form, {
           onUploadProgress,
           timeout: 120_000,
