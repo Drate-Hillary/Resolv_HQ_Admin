@@ -1,14 +1,14 @@
 # MCP-Style Agent Tool Interface Specification
 
-**Status:** Implemented for the four current tools over authenticated Streamable HTTP and stdio transports.  
+**Status:** Implemented for the five current tools over authenticated Streamable HTTP and stdio transports.  
 **Contract revision:** 1.0  
 **Implementation source:** `resolv-hq-backend/src/lib/agent-tools.ts`, `tool-registry.ts`, `react-agent.ts`, and `routes/chat.ts`.
 
 ## 1. Purpose and conformance
 
-This document specifies a stable, MCP-style contract for the four tools currently offered to the model by the ReAct loop. It defines tool discovery, input and output shapes, caller authorization, result/error behavior, and the boundary between tool execution and the host application.
+This document specifies a stable, MCP-style contract for the tools offered to the model by the ReAct loop and ticket-response agent. It defines tool discovery, input and output shapes, caller authorization, result/error behavior, and the boundary between tool execution and the host application.
 
-The backend exposes MCP `tools/list` and `tools/call` over Streamable HTTP at `/mcp` and a local stdio process. It also continues to use provider-native function calling inside authenticated `POST /chat/conversations/:id/messages`; these are separate invocation paths that share tool logic.
+The backend exposes MCP `tools/list` and `tools/call` over Streamable HTTP at `/mcp` and a local stdio process. The customer ticket-response agent also connects to the same MCP server through an in-process MCP client, using the authenticated customer's identity. The separate general chat endpoint continues to use provider-native function calling.
 
 ## 2. Service boundary and invocation
 
@@ -16,6 +16,7 @@ The backend exposes MCP `tools/list` and `tools/call` over Streamable HTTP at `/
 |---|---|
 | Tool provider | Resolv-HQ backend (shared handlers used by the ReAct loop and the MCP server) |
 | Chat invocation | Authenticated chat request; model requests a tool call, the backend executes it, then returns the observation to the model |
+| Ticket-response invocation | AI-mode ticket message uses an in-process MCP client; the model discovers and calls the active MCP tools, then the host stores the reply in that same ticket thread |
 | MCP invocation | External MCP client calls `tools/list` / `tools/call` over an authenticated transport |
 | MCP transports | Streamable HTTP at `/mcp`; stdio through the `mcp:stdio` command |
 | Identity | Verified Supabase bearer-token identity, resolved by backend middleware; never accept a caller/customer ID in tool arguments |
@@ -33,7 +34,7 @@ The backend has a fixed set of executable handlers in code. The `agent_tools` re
 The implemented MCP server exposes only these capabilities:
 
 - `tools` capability with `tools/list` discovery.
-- `tools/call` for the four named tools below.
+- `tools/call` for the five named tools below.
 - No resources, prompts, sampling, elicitation, or logging capabilities are implied by this document.
 - Mark tools with MCP annotations that describe their behavior (read-only, non-destructive, closed-world data); annotations are client hints only and never replace server-side authorization.
 
@@ -235,6 +236,30 @@ The text content is for human/model readability; `structuredContent` must match 
 
 **Failure behavior:** An empty list means there are no unresolved requests in the caller's authorized scope; it does not prove the service has no incidents.
 
+### `get_my_tickets`
+
+**Capability:** Find tickets in the authenticated caller's permitted request scope, optionally filtered by status group or title/ticket number.
+
+**Input schema:**
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "status": { "type": "string", "enum": ["open", "resolved", "all"] },
+    "query": { "type": "string" }
+  },
+  "required": [],
+  "additionalProperties": false
+}
+```
+
+**Normalized output:** An object with `tickets` (ticket number, title, status, priority, and creation date) and a `message`. No-match results return an empty array.
+
+**Authorization and scope:** Requests are loaded by the authenticated caller's role before filtering. Customers can only see their own tickets; staff have the staff request scope.
+
+**Side effects:** None.
+
 ### `draft_escalation_ticket`
 
 **Capability:** Prepare a proposed escalation for human review; the tool itself does not submit or persist it.
@@ -305,7 +330,7 @@ The text content is for human/model readability; `structuredContent` must match 
 
 ## 6. Error mapping
 
-The current provider-native executor reports malformed model-call JSON, inactive tool names, and unknown tools as textual observations to the model. This is an internal recovery behavior, **not** the MCP error contract.
+The provider-native chat executor reports malformed model-call JSON, inactive tool names, and unknown tools as textual observations to the model. The ticket-response agent invokes MCP `tools/call` and returns MCP tool errors as observations. These internal recovery behaviors are **not** the external MCP error contract.
 
 The MCP adapter behavior is:
 
@@ -329,7 +354,7 @@ Protocol parse, method, and input errors are emitted by the official MCP SDK for
 
 The route is behind global `requireAuth`, verifies conversation ownership, and applies a 20-per-minute per-caller chat rate limit. The host loads customer memory server-side only for customer callers, only when the master preference is enabled, and only for enabled facts. Staff callers receive no customer memory. Customer-provided fields cannot select the memory owner.
 
-The host route, not an MCP server, persists messages. When an escalation draft exists, the route also records its run and pending approval separately from execution of the in-memory draft tool.
+The host route, not an MCP tool, persists chat messages. For ticket replies, the host likewise persists the final assistant reply to `request_messages`; the agent's discovery and retrieval tool calls are made through an authenticated in-process MCP client. The ticket host owns the response-mode check and message persistence, not the MCP tool server.
 
 ## 8. Configuration and usage
 
@@ -341,7 +366,7 @@ The transport is stateless: it does not issue MCP session IDs. The client must s
 
 ### Console MCP tester
 
-Signed-in staff can test the HTTP endpoint from the admin console at **MCP Tester** (`/mcp` in `resolv-hq`, in the Governance sidebar group). It sends the same JSON-RPC requests as any client, using the staff member's own session, so results reflect the staff role's scope. It can list the advertised tools, call any tool with hand-edited JSON arguments (including a one-click unexpected argument), show the raw request and response, and run a smoke suite: `tools/list` matches the active registry, each tool succeeds with valid input, the escalation draft reports `submitted: false`, and an unexpected argument, a missing argument, a blank summary and an unknown tool are all rejected. All four tools are read-only or in-memory, so testing changes no customer data. The stdio transport cannot be called from a browser; test it with an MCP client such as the MCP Inspector.
+Signed-in staff can test the HTTP endpoint from the admin console at **MCP Tester** (`/mcp` in `resolv-hq`, in the Governance sidebar group). It sends the same JSON-RPC requests as any client, using the staff member's own session, so results reflect the staff role's scope. It can list the advertised tools, call any tool with hand-edited JSON arguments (including a one-click unexpected argument), show the raw request and response, and run a smoke suite: `tools/list` matches the active registry, each tool succeeds with valid input, the escalation draft reports `submitted: false`, and an unexpected argument, a missing argument, a blank summary and an unknown tool are all rejected. The read-only lookups and in-memory draft do not change customer data. The stdio transport cannot be called from a browser; test it with an MCP client such as the MCP Inspector.
 
 ### stdio
 
