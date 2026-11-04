@@ -94,7 +94,13 @@ function diagnose(raw: string): { cause: string; fix: string } {
       fix: "Retry in a few minutes. Another provider takes over if one is active.",
     }
   }
-  if (/fetch failed|econnrefused|enotfound|etimedout|network|timed out/.test(text)) {
+  if (/operation was aborted due to timeout|timeout|timed out|etimedout/.test(text)) {
+    return {
+      cause: "The provider did not respond before the request timed out.",
+      fix: "Retry, check the provider's status and model configuration, or use another active provider.",
+    }
+  }
+  if (/fetch failed|econnrefused|enotfound|network/.test(text)) {
     return {
       cause: "The backend couldn't reach the provider (network failure).",
       fix: "Check the server's internet connection and the provider's endpoint, then retry.",
