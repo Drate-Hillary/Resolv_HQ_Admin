@@ -41,3 +41,11 @@ test("classifies a network failure", () => {
   assert.equal(failure.error, '"fetch failed"')
   assert.match(failure.cause, /network/)
 })
+
+test("classifies an aborted provider timeout with an actionable fix", () => {
+  const [failure] = parseProviderFailures(
+    "All registered providers failed: Gemini-Resolv: The operation was aborted due to timeout",
+  )
+  assert.match(failure.cause, /did not respond before the request timed out/)
+  assert.match(failure.fix, /provider's status and model configuration/)
+})

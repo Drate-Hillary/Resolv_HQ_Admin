@@ -12,7 +12,7 @@ This document makes the system's state explicit: what exists, where it lives, wh
 | **Conversation state** | One chat thread | `ai_conversations`, `ai_messages`, `ai_message_sources` | Chat route, after the turn | The owning caller; staff via admin views |
 | **Run state** | One agent run | `agent_runs`, `agent_steps`, `tool_executions`, `guardrail_events` | Chat route / agent loop | Admin traces |
 | **Approval state** | Until decided | `agent_approvals` | Server records a pending row when a draft exists; only an admin can decide | Admin approvals queue |
-| **Case state** | Life of the support case | `requests`, `request_status_history`, `request_messages` | Customer and staff via the API | Owning customer and staff |
+| **Case state** | Life of the support case | `requests` (including `response_mode`), `request_status_history`, `request_messages` | Customer and staff via the API | Owning customer and staff |
 | **Persistent memory** | Until deleted | `customer_memory` (+ `customer_profiles.memory_enabled`), `agent_memory_records`, audit in `customer_memory_access_logs` | See §3 | See §3 |
 | **Tool-registry state** | Until changed by an admin | `agent_tools` (`is_active`) | Admin tools route | Chat loop and MCP server (checked on every call) |
 
@@ -36,6 +36,8 @@ flowchart TD
 ```
 
 Nothing from turn state carries to the next turn except what is persisted above. The model never writes memory.
+
+Ticket replies use the mode stored on the request. **Human** is the default for new tickets and all existing tickets; customers may switch an open ticket between Human and AI. Human mode routes customer replies to the staff queue. AI mode responds in the same `request_messages` thread and stores assistant replies as `sender_type = 'assistant'`. Staff replies are blocked while AI mode is active, and AI ticket requests are rate-limited.
 
 ## 3. Persistent memory: ownership and access
 
